@@ -1,18 +1,9 @@
 module Main where
 
-import Data.Char
-import Network.HTTP.Client
-import Network.HTTP.Client.TLS   (tlsManagerSettings)
-import Network.HTTP.Types.Status (statusCode)
-
-upperCase :: String -> String
-upperCase str = map toUpper str
+import TelegramApi
 
 main :: IO ()
-main = do 
- manager <- newManager tlsManagerSettings
- request <- parseRequest ("https://api.telegram.org/"++ token ++"/sendMessage?text=privet&chat_id=193856114")
- response <- httpLbs request manager
- putStrLn $ "The status code was: " ++ show (statusCode $ responseStatus response)
- print $ responseBody response
- where token = "token"
+main = do
+ str <- getLine
+ mes <- sendMessage "295506649:AAG9_Ahtmi9P5OUDbQacwhq6RZ4pJVC3ADg" str
+ print $ mes
