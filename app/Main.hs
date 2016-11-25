@@ -1,10 +1,10 @@
 module Main where
 
-import TelegramApi
+import TelegramApi(sendMessage)
 
 main :: IO ()
 main = do
-    str <- getLine
-    mes <- sendMessage "" str
+    token <- getLine
+    messageText <- getLine
+    mes <- sendMessage token messageText
     print $ mes
-    where token = "token"
