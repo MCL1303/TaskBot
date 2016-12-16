@@ -1,28 +1,44 @@
-module Main where
+module Main(main) where
 
-import TelegramApi(sendMessage, getLastMessages, msgText, updUpdate_id, updMessage, msgChat, chtId)
+import TelegramApi(
+                       sendMessage, 
+                       getLastMessages,
+                       msgText,
+                       updUpdate_id,
+                       updMessage,
+                       msgChat,
+                       chtId,
+                       Update
+                   )
 
-bot :: String -> Int -> IO()
+
+forUpdates :: String -> [Update] -> IO Int
+ansOnUpdates token updates = 
+    do
+        msg <- case (updMessage (head updates)) of
+                   Just message -> sendMessage token (getMessageText message) (chtId (msgChat message))
+        if null (tail updates) then
+            pure (updUpdate_id (head updates))
+        else
+            ansOnUpdates token (tail updates)
+    where getMessageText a = case msgText a of
+                              Nothing -> ""
+                              Just message -> message
+
+bot :: String -> Maybe Int -> IO ()
 bot token offset = do
-    updts <- getLastMessages token (Just offset)
-    case updts of
-        Nothing -> print "oops"
-        Just d -> do
-            case (null d) of
-                True -> do
-                    bot token (offset)
-                False -> do
-                    msg <- sendMessage token (msgText (updMessage (head d))) (show(chtId (msgChat (updMessage (head d)))))
-                    --print $ (show msg)
-                    bot token (offset + 1)
+    updates <- getLastMessages token offset
+    print $ updates
+    case updates of
+        Nothing -> bot token (offset)
+        Just d -> 
+            if null d then
+                bot token (offset)
+            else do
+                off <- forUpdates token d
+                bot token (Just (off + 1))
+
 main :: IO ()
 main = do
     token <- getLine
-    messageText <- getLine
-    updts <- getLastMessages token Nothing
-    case updts of
-        Nothing -> print "oops"
-        Just d -> do
-            msg <- sendMessage token (msgText (updMessage (head d))) (show(chtId (msgChat (updMessage (head d)))))
-            print $ (show msg)
-            bot token (updUpdate_id (head d))
+    bot token Nothing
