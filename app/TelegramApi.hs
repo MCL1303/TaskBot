@@ -9,7 +9,12 @@ module TelegramApi
 import Data.ByteString                        (ByteString)
 import Data.Text                              (pack)
 import Data.Text.Encoding                     (encodeUtf8)
-import Network.HTTP.Client                    (httpLbs, responseStatus, responseBody, newManager, parseRequest)
+import Network.HTTP.Client                    (httpLbs
+                                              , responseStatus
+                                              , responseBody
+                                              , newManager
+                                              , parseRequest
+                                              )
 import Network.HTTP.Client.TLS                (tlsManagerSettings)
 import Network.HTTP.Conduit                   (setQueryString)
 import Network.HTTP.Types.Status              (statusCode)
@@ -26,5 +31,6 @@ getHttpRequest url args = do
 sendMessage :: String -> String -> IO Lazy.ByteString
 sendMessage token message = getHttpRequest url params
     where params = [("text", Just $ encodeUtf8 (pack message))
-                    , ("chat_id",Just $ encodeUtf8 "193856114")]
+                   , ("chat_id",Just $ encodeUtf8 "193856114")
+                   ]
           url = ("https://api.telegram.org/bot" ++ token ++ "/sendMessage")
