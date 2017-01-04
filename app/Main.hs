@@ -1,40 +1,41 @@
-module Main(main) where
+module Main (main) where
 
 import TelegramApi
     (
-        --API's methods
         sendMessage,
         getLastMessages,
-        --API's types
         Message(msgText,msgChat),
         Update(updMessage,updUpdate_id),
         Chat(chtId)
     )
 
-forUpdates :: String -> [Update] -> IO Int
-forUpdates token updates = do
-        msg <- case updMessage (head updates) of
-            Just message -> sendMessage token (getMessageText message) (chtId (msgChat message))
-        if null (tail updates) then
-            pure (updUpdate_id (head updates))
-        else
-            forUpdates token (tail updates)
+forUpdates :: String -> [Update] -> Maybe Int -> IO (Maybe Int)
+forUpdates token updates offset = do
+    case updates of
+        []   -> case offset of
+                    Nothing -> pure offset
+                    Just a -> pure (Just a)
+        x:xs -> do
+                        msg <- case updMessage x of
+                           Just message ->
+                               sendMessage
+                                   token
+                                   (getMessageText message)
+                                   (chtId (msgChat message))
+                forUpdates token xs (Just ((updUpdate_id x) + 1))
   where getMessageText a = case msgText a of
-                               Nothing -> ""
+                               Nothing      -> ""
                                Just message -> message
 
 bot :: String -> Maybe Int -> IO ()
 bot token offset = do
     updates <- getLastMessages token offset
-    print $ updates
+    print updates
     case updates of
         Nothing -> bot token (offset)
-        Just d ->
-            case d of
-                [] -> bot token (offset)
-                _  -> do
-                    off <- forUpdates token d
-                    bot token (Just (off + 1))
+        Just d  -> do
+            off <- forUpdates token d offset
+            bot token off
 
 main :: IO ()
 main = do
