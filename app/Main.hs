@@ -1,5 +1,10 @@
 module Main (main) where
 
+import           Control.Exception (IOException, catch)
+import           System.Exit       (exitFailure)
+import           System.IO         (hPutStr, readFile, stderr)
+import           System.IO.Error   (isDoesNotExistError)
+
 import TelegramApi
     (
         sendMessage,
@@ -8,6 +13,8 @@ import TelegramApi
         Update(updMessage,updUpdate_id),
         Chat(chtId)
     )
+
+putLog a = hPutStr stderr (a ++ "\n")
 
 forUpdates :: String -> [Update] -> Maybe Int -> IO (Maybe Int)
 forUpdates token updates offset = do
@@ -28,6 +35,18 @@ forUpdates token updates offset = do
         Nothing      -> ""
         Just message -> message
 
+loadToken :: String -> IO String
+loadToken fileName = do
+    catch (readFile fileName) handler
+  where
+      handler e
+          |isDoesNotExistError e = do
+              putLog "Couldn't find token file."
+              exitFailure
+          |otherwise = do
+              putLog (show e)
+              exitFailure
+
 bot :: String -> Maybe Int -> IO ()
 bot token curOffset = do
     mUpdates <- getLastMessages token curOffset
@@ -39,5 +58,6 @@ bot token curOffset = do
 
 main :: IO ()
 main = do
-    token <- getLine
+    token <- loadToken tokenFile
     bot token Nothing
+  where tokenFile = "token.txt"
