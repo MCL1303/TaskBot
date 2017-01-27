@@ -54,8 +54,8 @@ getLastMessages :: String -> Maybe Int -> IO (Maybe [Update])
 getLastMessages token offset = do
     updates <-
         case offset of
-            Nothing -> getHttpRequest (callMethod token "getUpdates") []
-            Just s  -> getHttpRequest (callMethod token ("getUpdates"))
+            Nothing -> getHttpRequest token "getUpdates" []
+            Just s  -> getHttpRequest token "getUpdates"
                            [("offset", Just $ encodeUtf8 (pack (show s)))]
     case eitherDecode updates of
         Left jsonError -> do
@@ -66,13 +66,17 @@ getLastMessages token offset = do
 
 getHttpRequest
     :: String
+    -> String
     -> [(ByteString, Maybe ByteString)]
     -> IO Lazy.ByteString
-getHttpRequest url args = do
+getHttpRequest token method args = do
     manager  <- newManager tlsManagerSettings
     request  <- parseRequest url
     response <- httpLbs (setQueryString args request) manager
     pure $ responseBody response
+  where
+    api_url = "https://api.telegram.org/bot"
+    url = api_url ++ token ++ "/" ++ method
 
 sendMessage
     :: String -- ^ Token
@@ -84,7 +88,3 @@ sendMessage token message user =
   where params = [ ("text", Just $ encodeUtf8 (pack message))
                  , ("chat_id", Just $ encodeUtf8 (pack (show user)))
                  ]
-
-callMethod :: String -> String -> String
-callMethod token method = api_url ++ token ++ "/" ++ method
-  where api_url = "https://api.telegram.org/bot"
