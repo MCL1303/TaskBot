@@ -11,22 +11,24 @@ copyright:           2016 Kemphag
 category:            Web
 build-type:          Simple
 -- extra-source-files:
-cabal-version:       >=1.10		
+cabal-version:       >=1.10
 
 executable TaskBot-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                      , bytestring
-                      , HTTP
-                      , http-client
-                      , http-client-tls
-                      , http-conduit
-                      , http-types
-                      , text
+  build-depends:       aeson
+                     , base
+                     , bytestring
+                     , HTTP
+                     , http-client
+                     , http-client-tls
+                     , http-conduit
+                     , http-types
+                     , template-haskell
+                     , text
   default-language:    Haskell2010
-  other-modules:       TelegramApi
+  other-modules:       TelegramApi, Tools
 
 test-suite TaskBot-test
   type:                exitcode-stdio-1.0
