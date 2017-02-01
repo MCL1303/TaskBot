@@ -21,14 +21,14 @@ before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64
     | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  - alias stack="stack --no-terminal --install-ghc"
+  - export stack="stack --no-terminal --install-ghc"
 
 matrix:
   include:
     - compiler: build and test
       install:
         # Build dependencies
-        - stack build --test --only-dependencies
+        - $stack build --test --only-dependencies
       script:
         # Build the package, its tests, and its docs and run the tests
-        - stack test --pedantic --haddock --no-haddock-deps
+        - $stack test --pedantic --haddock --no-haddock-deps
