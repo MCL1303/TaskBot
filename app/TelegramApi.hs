@@ -54,8 +54,8 @@ getLastMessages :: String -> Maybe Int -> IO (Maybe [Update])
 getLastMessages token offset = do
     updates <-
         case offset of
-            Nothing -> getHttpRequest token "getUpdates" []
-            Just s  -> getHttpRequest token "getUpdates"
+            Nothing -> getHttpResponse token "getUpdates" []
+            Just s  -> getHttpResponse token "getUpdates"
                            [("offset", Just $ encodeUtf8 (pack (show s)))]
     case eitherDecode updates of
         Left jsonError -> do
@@ -64,12 +64,12 @@ getLastMessages token offset = do
         Right d -> do
             pure (resResult d)
 
-getHttpRequest
-    :: String
-    -> String
-    -> [(ByteString, Maybe ByteString)]
-    -> IO Lazy.ByteString
-getHttpRequest token method args = do
+getHttpResponse
+    :: String -- ^ Token
+    -> String -- ^ Method's name (from Telegram APIs)
+    -> [(ByteString, Maybe ByteString)] -- ^ Method's arguments
+    -> IO Lazy.ByteString -- ^ Raw response
+getHttpResponse token method args = do
     manager  <- newManager tlsManagerSettings
     request  <- parseRequest url
     response <- httpLbs (setQueryString args request) manager
@@ -84,7 +84,7 @@ sendMessage
     -> Int    -- ^ Chat_Id where send message
     -> IO Lazy.ByteString -- ^ Response from server
 sendMessage token message user =
-    getHttpRequest (callMethod token "sendMessage") params
+    getHttpResponse token "sendMessage" params
   where params = [ ("text", Just $ encodeUtf8 (pack message))
                  , ("chat_id", Just $ encodeUtf8 (pack (show user)))
                  ]

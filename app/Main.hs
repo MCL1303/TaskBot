@@ -13,29 +13,29 @@ forUpdates :: String -> [Update] -> Maybe Int -> IO (Maybe Int)
 forUpdates token updates offset = do
     case updates of
         []   -> case offset of
-                    Nothing -> pure offset
-                    Just a -> pure (Just a)
+            Nothing -> pure offset
+            Just a -> pure (Just a)
         x:xs -> do
-                        msg <- case updMessage x of
-                           Just message ->
-                               sendMessage
-                                   token
-                                   (getMessageText message)
-                                   (chtId (msgChat message))
-                forUpdates token xs (Just ((updUpdate_id x) + 1))
-  where getMessageText a = case msgText a of
-                               Nothing      -> ""
-                               Just message -> message
+            msg <- case updMessage x of
+                Just message ->
+                    sendMessage
+                        token
+                        (getMessageText message)
+                        (chtId (msgChat message))
+            forUpdates token xs (Just (updUpdate_id x + 1))
+  where
+    getMessageText a = case msgText a of
+        Nothing      -> ""
+        Just message -> message
 
 bot :: String -> Maybe Int -> IO ()
-bot token offset = do
-    updates <- getLastMessages token offset
-    print updates
-    case updates of
-        Nothing -> bot token (offset)
-        Just d  -> do
-            off <- forUpdates token d offset
-            bot token off
+bot token curOffset = do
+    mUpdates <- getLastMessages token curOffset
+    case mUpdates of
+        Nothing -> bot token curOffset
+        Just updates  -> do
+            newOffset <- forUpdates token updates curOffset
+            bot token newOffset
 
 main :: IO ()
 main = do
