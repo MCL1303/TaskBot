@@ -10,15 +10,15 @@ import TelegramApi
     )
 import Tools (readParam, writeParam)
 
---Preferences
-update_id = "update_id.txt"
+-- | Filepath constant
+updateIdFile = "update_id.txt"
 
-forUpdates
+processUpdates
     :: String -- ^ Token
     -> [Update] -- ^ List of updates
     -> Maybe Int -- ^ Offset(current update id)
     -> IO (Maybe Int) -- ^ New offset
-forUpdates token updates offset = do
+processUpdates token updates offset = do
     case updates of
         []   -> case offset of
             Nothing -> pure offset
@@ -30,8 +30,8 @@ forUpdates token updates offset = do
                         token
                         (getMessageText message)
                         (chtId (msgChat message))
-            writeParam update_id (updUpdate_id x)
-            forUpdates token xs (Just (updUpdate_id x + 1))
+            writeParam updateIdFile (updUpdate_id x)
+            processUpdates token xs (Just (updUpdate_id x + 1))
   where
     getMessageText a = case msgText a of
         Nothing      -> ""
@@ -47,11 +47,11 @@ bot token curOffset = do
         Nothing -> do
             bot token curOffset
         Just updates  -> do
-            newOffset <- forUpdates token updates curOffset
+            newOffset <- processUpdates token updates curOffset
             bot token newOffset
 
 main :: IO ()
 main = do
-    offset <- readParam update_id
+    offset <- readParam updateIdFile
     token <- getLine
     bot token offset
