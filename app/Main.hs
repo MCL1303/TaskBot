@@ -39,13 +39,13 @@ loadToken :: String -> IO String
 loadToken fileName = do
     catch (readFile fileName) handler
   where
-      handler e
-          |isDoesNotExistError e = do
-              putLog "Couldn't find token file."
-              exitFailure
-          |otherwise = do
-              putLog (show e)
-              exitFailure
+    handler e =
+        if (isDoesNotExistError e) then do
+            putLog "Couldn't find token file."
+            exitFailure
+        else do
+            putLog (show e)
+            exitFailure
 
 bot :: String -> Maybe Int -> IO ()
 bot token curOffset = do
