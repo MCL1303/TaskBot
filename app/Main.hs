@@ -15,15 +15,17 @@ loadToken :: String -> IO String
 loadToken fileName = do
     catch (readFile fileName) handler
   where
-      handler e
-          |isDoesNotExistError e = do
-              putLog "Couldn't find token file."
-              exitFailure
-          |otherwise = do
-              putLog (show e)
-              exitFailure
+    handler e =
+        if (isDoesNotExistError e) then do
+            putLog "Couldn't find token file."
+            exitFailure
+        else do
+            putLog (show e)
+            exitFailure
 
 main :: IO ()
 main = do
-    str <- loadToken ""
-    print $ str
+    str <- loadToken filePath
+    print str
+  where
+  	filePath = "token.txt"
