@@ -1,16 +1,11 @@
 module Main (main) where
 
-import TelegramApi
-    (
-        sendMessage,
-        getLastMessages,
-        Message(msgText,msgChat),
-        Update(updMessage,updUpdate_id),
-        Chat(chtId)
-    )
-import Tools (readParam, writeParam)
+import           TelegramApi (Chat (chtId), Message (msgChat, msgText),
+                              Update (updMessage, updUpdate_id),
+                              getLastMessages, sendMessage)
+import           Tools       (readParam, writeParam)
 
--- | Filepath constant
+-- | Filepath to file, containing current update id
 updateIdFile = "update_id.txt"
 
 processUpdates
@@ -22,7 +17,7 @@ processUpdates token updates offset = do
     case updates of
         []   -> case offset of
             Nothing -> pure offset
-            Just a -> pure (Just a)
+            Just a  -> pure (Just a)
         x:xs -> do
             msg <- case updMessage x of
                 Just message ->
