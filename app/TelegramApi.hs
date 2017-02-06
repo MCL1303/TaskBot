@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module TelegramApi
     (
@@ -12,20 +12,19 @@ module TelegramApi
     , Chat(chtId)
     ) where
 
-import Data.Aeson                (eitherDecode)
-import qualified Data.ByteString.Lazy as Lazy (ByteString)
-import Data.ByteString           (ByteString)
-import Data.Text                 (pack)
-import Data.Text.Encoding        (encodeUtf8)
-import Network.HTTP.Client       (httpLbs
-                                 , responseBody
-                                 , newManager
-                                 , parseRequest
-                                 )
-import Network.HTTP.Client.TLS   (tlsManagerSettings)
-import Network.HTTP.Conduit      (setQueryString)
+import           Data.Aeson                (decode, eitherDecode, encode)
+import           Data.ByteString           (ByteString)
+import qualified Data.ByteString.Lazy      as Lazy (ByteString)
+import           Data.Char                 (toLower)
+import           Data.Text                 (pack)
+import           Data.Text.Encoding        (encodeUtf8)
+import           Network.HTTP.Client       (httpLbs, newManager, parseRequest,
+                                            responseBody, responseStatus)
+import           Network.HTTP.Client.TLS   (tlsManagerSettings)
+import           Network.HTTP.Conduit      (setQueryString)
+import           Network.HTTP.Types.Status (statusCode)
 
-import Tools                     (drvJS)
+import           Tools                     (drvJS)
 
 data Result = Result
     { resResult :: Maybe [Update]
