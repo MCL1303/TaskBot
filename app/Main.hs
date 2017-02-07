@@ -5,7 +5,7 @@ import           TelegramApi (Chat (chtId), Message (msgChat, msgText),
                               getLastMessages, sendMessage)
 import           Tools       (readParam, writeParam)
 
--- | Filepath to file, containing current update id
+-- | Path to file which containing current update id
 updateIdFile = "update_id.txt"
 
 processUpdates
