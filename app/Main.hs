@@ -5,13 +5,13 @@ import           TelegramApi (Chat (chtId), Message (msgChat, msgText),
                               getLastMessages, sendMessage)
 import           Tools       (readParam, writeParam)
 
--- | Path to file which containing current update id
+-- | Path to file which contains current update id
 updateIdFile = "update_id.txt"
 
 processUpdates
     :: String -- ^ Token
     -> [Update] -- ^ List of updates
-    -> Maybe Int -- ^ Offset(current update id)
+    -> Maybe Int -- ^ Offset (current update id)
     -> IO (Maybe Int) -- ^ New offset
 processUpdates token updates offset = do
     case updates of
@@ -34,7 +34,7 @@ processUpdates token updates offset = do
 
 bot
     :: String -- ^ Token
-    -> Maybe Int -- ^ Offset(Update id)
+    -> Maybe Int -- ^ Offset (update id)
     -> IO ()
 bot token curOffset = do
     mUpdates <- getLastMessages token curOffset
