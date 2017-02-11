@@ -14,26 +14,20 @@ putLog a = hPutStrLn stderr a
 processUpdates
     :: String -- ^ Token
     -> [Update] -- ^ List of updates
-    -> Maybe Int -- ^ Offset(current update id)
+    -> Maybe Int -- ^ Offset (current update id)
     -> IO (Maybe Int) -- ^ New offset
 processUpdates token updates offset = do
     case updates of
-        []   -> case offset of
-            Nothing -> pure offset
-            Just a  -> pure (Just a)
+        []   -> pure offset
         x:xs -> do
             msg <- case updMessage x of
                 Just message ->
                     sendMessage
                         token
-                        (getMessageText message)
+                        (fromMaybe message)
                         (chtId (msgChat message))
             --writeParam updateIdFile (updUpdate_id x)
             processUpdates token xs (Just (updUpdate_id x + 1))
-  where
-    getMessageText a = case msgText a of
-        Nothing      -> ""
-        Just message -> message
 
 bot
     :: String -- ^ Token
@@ -42,11 +36,9 @@ bot
 bot token curOffset = do
     mUpdates <- getLastMessages token curOffset
     case mUpdates of
-        Nothing -> do
-            bot token curOffset
-        Just updates  -> do
+        Just updates  ->
             newOffset <- processUpdates token updates curOffset
-            bot token newOffset
+    bot token newOffset
 
 forUpdates :: String -> [Update] -> Maybe Int -> IO (Maybe Int)
 forUpdates token updates offset = do
@@ -71,13 +63,12 @@ loadToken :: String -> IO String
 loadToken fileName = do
     catch (readFile fileName) handler
   where
-    handler e =
-        if (isDoesNotExistError e) then do
+    handler e = do
+        if (isDoesNotExistError e) then
             putLog "Couldn't find token file."
-            exitFailure
-        else do
+        else
             putLog (show e)
-            exitFailure
+        exitFailure
 
 main :: IO ()
 main = do
