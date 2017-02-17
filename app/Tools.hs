@@ -7,16 +7,11 @@ module Tools
     writeParam
 ) where
 
-import System.Exit
-import Control.Exception             (IOException, try)
-import Data.Aeson.TH                 ( defaultOptions
-                                     , Options( fieldLabelModifier
-                                              , constructorTagModifier
-                                              )
-                                     , deriveJSON
-                                     )
-import Data.Char                     (toLower)
-import Language.Haskell.TH.Syntax    (Q, Name, Dec)
+import           Control.Exception          (IOException, try)
+import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
+                                             defaultOptions, deriveJSON)
+import           Data.Char                  (toLower)
+import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 
 drvJS :: Name -> Q [Dec]
 drvJS bm = deriveJSON options bm
@@ -31,7 +26,9 @@ readParam fileName = do
     result <- try (readFile fileName) :: IO (Either IOException String)
     case (result) of
         Right fileParam -> pure (Just $ read fileParam)
-        Left error      -> pure Nothing
+        Left exception  -> do
+            print exception
+            pure Nothing
 
 writeParam :: (Show a) => String -> a -> IO ()
 writeParam fileName param = writeFile fileName (show param)

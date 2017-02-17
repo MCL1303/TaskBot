@@ -12,19 +12,17 @@ module TelegramApi
     , Chat(chtId)
     ) where
 
-import           Data.Aeson                (decode, eitherDecode, encode)
-import           Data.ByteString           (ByteString)
-import qualified Data.ByteString.Lazy      as Lazy (ByteString)
-import           Data.Char                 (toLower)
-import           Data.Text                 (pack)
-import           Data.Text.Encoding        (encodeUtf8)
-import           Network.HTTP.Client       (httpLbs, newManager, parseRequest,
-                                            responseBody, responseStatus)
-import           Network.HTTP.Client.TLS   (tlsManagerSettings)
-import           Network.HTTP.Conduit      (setQueryString)
-import           Network.HTTP.Types.Status (statusCode)
+import           Data.Aeson              (eitherDecode)
+import           Data.ByteString         (ByteString)
+import qualified Data.ByteString.Lazy    as Lazy (ByteString)
+import           Data.Text               (pack)
+import           Data.Text.Encoding      (encodeUtf8)
+import           Network.HTTP.Client     (httpLbs, newManager, parseRequest,
+                                          responseBody)
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Conduit    (setQueryString)
 
-import           Tools                     (drvJS)
+import           Tools                   (drvJS)
 
 data Result = Result
     { resResult :: Maybe [Update]
