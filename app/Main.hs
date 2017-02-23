@@ -51,5 +51,8 @@ bot token curOffset = do
 main :: IO ()
 main = do
     offset <- readParam updateIdFile
-    token <- getLine
-    bot token offset
+    tokenFromFile  <- readParam tokenFile
+    case tokenFromFile of
+        Just token -> bot token offset
+        Nothing    -> print ("Error opening " ++ tokenFile ++ "file.")
+  where tokenFile = "token.txt"
