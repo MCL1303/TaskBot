@@ -11,7 +11,7 @@ import           Tools                (readParam, writeParam)
 updateIdFile :: String
 updateIdFile = "update_id.txt"
 
--- | Sign error
+-- | Puts message in log
 putLog :: String -> IO()
 putLog = hPutStrLn stderr
 
