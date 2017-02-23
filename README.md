@@ -5,3 +5,4 @@
 
 ##Notes
 Creates file at working directory to keep update id.(update_id.txt)
+Reads token from token.txt.
