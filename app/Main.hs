@@ -1,5 +1,7 @@
 module Main (main) where
 
+import           System.IO                  (hPutStrLn, stderr)
+
 import           TelegramApi          (Chat (chtId), Message (msgChat, msgText),
                                        Update (updMessage, updUpdate_id),
                                        getLastMessages, sendMessage)
@@ -8,6 +10,10 @@ import           Tools                (readParam, writeParam)
 -- | Path to file which contains current update id
 updateIdFile :: String
 updateIdFile = "update_id.txt"
+
+-- | Puts message in log
+putLog :: String -> IO()
+putLog = hPutStrLn stderr
 
 processUpdates
     :: String -- ^ Token
@@ -51,5 +57,8 @@ bot token curOffset = do
 main :: IO ()
 main = do
     offset <- readParam updateIdFile
-    token <- getLine
-    bot token offset
+    tokenFromFile  <- readParam tokenFile
+    case tokenFromFile of
+        Just token -> bot token offset
+        Nothing    -> putLog ("Error opening " ++ tokenFile ++ "file.")
+  where tokenFile = "token.txt"
