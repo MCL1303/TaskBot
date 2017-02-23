@@ -1,7 +1,5 @@
 module Main (main) where
 
-import           Data.ByteString.Lazy as Lazy (empty)
-
 import           TelegramApi          (Chat (chtId), Message (msgChat, msgText),
                                        Update (updMessage, updUpdate_id),
                                        getLastMessages, sendMessage)
@@ -24,7 +22,7 @@ processUpdates token updates offset = do
         x:xs -> do
             case updMessage x of
                 Just message -> do
-                    sendMessage
+                    _ <- sendMessage
                         token
                         (getMessageText message)
                         (chtId (msgChat message))
