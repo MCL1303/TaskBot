@@ -22,13 +22,14 @@ processUpdates token updates offset = do
             Nothing -> pure offset
             Just a  -> pure (Just a)
         x:xs -> do
-            _ <- case updMessage x of
-                Just message ->
+            case updMessage x of
+                Just message -> do
                     sendMessage
                         token
                         (getMessageText message)
                         (chtId (msgChat message))
-                Nothing      -> pure empty
+                    pure()
+                Nothing      -> pure ()
             writeParam updateIdFile (updUpdate_id x)
             processUpdates token xs (Just (updUpdate_id x + 1))
   where
