@@ -26,6 +26,7 @@ putLog = hPutStrLn stderr
 handleMessage :: Token -> Update -> IO ()
 handleMessage token update = do
     manager <- newManager tlsManagerSettings
+    writeParam updateIdFile (update_id update)
     case (message update) of
         Just msg -> do
             res <- sendMessage
@@ -57,7 +58,6 @@ bot token curOffset = do
             case (lastMay updates) of
                 Just lastM -> do
                     let newOffset = update_id lastM + 1
-                    writeParam updateIdFile newOffset
                     bot token (Just (newOffset))
                 Nothing    -> bot token curOffset
         Left uError    -> do
