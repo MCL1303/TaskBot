@@ -1,23 +1,19 @@
 module Main (main) where
 
-import           Data.Foldable                  (for_)
-import           Data.Maybe                     (fromMaybe)
-import           Data.Text                      (pack, strip)
-import           Data.Text.Internal             (empty)
-import           Network.HTTP.Client            (newManager)
-import           Network.HTTP.Client.TLS        (tlsManagerSettings)
-import           Safe                           (lastMay)
-import           System.IO                      (hPutStrLn, stderr)
-import           Web.Telegram.API.Bot           (Token (Token), getUpdates,
-                                                 sendMessage)
-import           Web.Telegram.API.Bot.Data      (Chat (chat_id),
-                                                 Message (chat, text),
-                                                 Update (message, update_id))
-import           Web.Telegram.API.Bot.Requests  (sendMessageRequest)
-import           Web.Telegram.API.Bot.Responses (Response (result))
-
-import           Tools                          (readParam, readParamString,
-                                                 writeParam)
+import           Data.Foldable           (for_)
+import           Data.Maybe              (fromMaybe)
+import           Data.Text               (empty, pack, strip)
+import           Network.HTTP.Client     (newManager)
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Safe                    (lastMay)
+import           System.IO               (hPutStrLn, stderr)
+import           Tools                   (readParam, readParamString,
+                                          writeParam)
+import           Web.Telegram.API.Bot    (Chat (chat_id), Message (chat, text),
+                                          Response (result), Token (Token),
+                                          Update (message, update_id),
+                                          getUpdates, sendMessage,
+                                          sendMessageRequest)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
@@ -64,7 +60,7 @@ bot token curOffset = do
                     writeParam updateIdFile newOffset
                     bot token (Just (newOffset))
                 Nothing    -> bot token curOffset
-        Left uError     -> do
+        Left uError    -> do
             putLog (show uError)
             bot token curOffset
 

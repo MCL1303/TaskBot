@@ -35,7 +35,6 @@ readParamString fileName = do
     case (result) of
         Right fileParam -> pure (Just fileParam)
         Left exception  -> do
-            print exception
             pure Nothing
 
 writeParam :: (Show a) => String -> a -> IO ()
