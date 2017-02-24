@@ -34,8 +34,7 @@ readParamString fileName = do
     result <- try (readFile fileName) :: IO (Either IOException String)
     case (result) of
         Right fileParam -> pure (Just fileParam)
-        Left _          -> do
-            pure Nothing
+        Left _          -> pure Nothing
 
 writeParam :: (Show a) => String -> a -> IO ()
 writeParam fileName param = writeFile fileName (show param)
