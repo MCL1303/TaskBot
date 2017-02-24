@@ -25,10 +25,12 @@ executable TaskBot-exe
                      , http-client-tls
                      , http-conduit
                      , http-types
+                     , safe
+                     , telegram-api
                      , template-haskell
                      , text
   default-language:    Haskell2010
-  other-modules:       TelegramApi, Tools
+  other-modules:       Tools
 
 test-suite TaskBot-test
   type:                exitcode-stdio-1.0
