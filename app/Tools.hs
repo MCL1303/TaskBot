@@ -22,19 +22,18 @@ drvJS bm = deriveJSON options bm
         , constructorTagModifier = map toLower
         }
 
-readParam :: (Read a) => String -> IO (Maybe a)
+readParam :: (Read a) => String -> IO (Either IOException a)
 readParam fileName = do
     param <- readParamString fileName
-    case param of
-        Just string -> pure (Just(read string))
-        Nothing     -> pure Nothing
+    let eParam = case param of
+            Right string -> Right (read string)
+            Left e       -> Left e
+    pure eParam
 
-readParamString :: String -> IO (Maybe String)
+readParamString :: String -> IO (Either IOException String)
 readParamString fileName = do
-    result <- try (readFile fileName) :: IO (Either IOException String)
-    case (result) of
-        Right fileParam -> pure (Just fileParam)
-        Left _          -> pure Nothing
+    eResult <- try (readFile fileName) :: IO (Either IOException String)
+    pure eResult
 
 writeParam :: (Show a) => String -> a -> IO ()
 writeParam fileName param = writeFile fileName (show param)
