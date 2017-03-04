@@ -58,7 +58,7 @@ bot token curOffset manager = do
                 Nothing    -> bot token curOffset manager
         Left uError    -> do
             putLog (show uError)
-            threadDelay
+            threadDelay timeout
             bot token curOffset manager
 
 main :: IO ()

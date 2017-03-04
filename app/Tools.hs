@@ -20,7 +20,7 @@ import           Data.Text                  (pack, strip)
 import           Data.Monoid                ((<>))
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.Exit                (exitFailure)
-import           System.IO                  (FilePath, hPutStrLn, stderr)
+import           System.IO                  (hPutStrLn, stderr)
 import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
