@@ -8,7 +8,7 @@ import           Data.Text               (pack)
 import           Network.HTTP.Client     (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Safe                    (lastMay)
-import           Tools                   (putLog, readOffset, readToken,
+import           Tools                   (putLog, loadOffset, loadToken,
                                           saveOffset)
 import           Web.Telegram.API.Bot    (Chat (..), Message (..),
                                           Response (..), Token (..),
@@ -24,22 +24,22 @@ timeout :: Int
 timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
-handleMessage token manager Update{update_id, message} = do
+handleMessage token manager update = do
+    let Update{update_id, message} = update
     case message of
-        Just Message{chat = Chat{chat_id}, text} -> do
-            case text of
-                Just jText -> do
-                    res <- sendMessage
-                        token
-                        (sendMessageRequest (pack $ show chat_id) jText)
-                        manager
-                    case res of
-                        Left e  ->
-                            putLog ("Message request failed. " ++ (show e))
-                        Right _ -> do
-                            saveOffset updateIdFile update_id
-                Nothing -> pure()
-        Nothing   -> pure()
+        Just Message{chat = Chat{chat_id}, text = (Just text)} -> do
+            res <- sendMessage
+                token
+                (sendMessageRequest (pack $ show chat_id) text)
+                manager
+            case res of
+                Left e  -> do
+                    putLog ("Message request failed. " ++ (show e))
+                    threadDelay timeout
+                    handleMessage token manager update
+                Right _ -> do
+                    saveOffset updateIdFile update_id
+        _ -> pure()
 
 bot
     :: Token
@@ -63,8 +63,8 @@ bot token curOffset manager = do
 
 main :: IO ()
 main = do
-    offset   <- readOffset updateIdFile
-    token    <- readToken tokenFile
+    offset   <- loadOffset updateIdFile
+    token    <- loadToken tokenFile
     manager  <- newManager tlsManagerSettings
     bot token offset manager
   where tokenFile = "token.txt"

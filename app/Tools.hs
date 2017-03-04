@@ -5,8 +5,8 @@ module Tools
     -- * deriving tools
     drvJS,
     -- * I/O tools
-    readOffset,
-    readToken,
+    loadOffset,
+    loadToken,
     saveOffset,
     -- * Log tool
     putLog
@@ -20,7 +20,7 @@ import           Data.Text                  (pack, strip)
 import           Data.Monoid                ((<>))
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.Exit                (exitFailure)
-import           System.IO                  (hPutStrLn, stderr)
+import           System.IO                  (hPutStrLn, stderr, openFile, IOMode(ReadWriteMode), hGetContents)
 import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
@@ -35,8 +35,8 @@ drvJS bm = deriveJSON options bm
         , constructorTagModifier = map toLower
         }
 
-readToken :: FilePath -> IO Token
-readToken fileName = do
+loadToken :: FilePath -> IO Token
+loadToken fileName = do
     eToken <- try (readFile fileName) :: IO (Either IOException String)
     case eToken of
         Right rawToken -> pure (Token ("bot" <> strip (pack (rawToken))))
@@ -45,13 +45,13 @@ readToken fileName = do
             putLog (show e)
             exitFailure
 
-readOffset :: FilePath -> IO (Maybe Int)
-readOffset fileName = do
-    eOffset <- try (readFile fileName) :: IO (Either IOException String)
+loadOffset :: FilePath -> IO (Maybe Int)
+loadOffset fileName = do
+    eOffset <- try (openFile fileName ReadWriteMode >>= hGetContents) :: IO (Either IOException String)
     case eOffset of
         Right offsetString -> pure (read offsetString)
         Left  e            -> do
-            putLog(show e)
+            putLog (show e)
             pure Nothing
 
 saveOffset :: FilePath -> Int -> IO ()
