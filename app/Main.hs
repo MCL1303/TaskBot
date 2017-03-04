@@ -1,64 +1,69 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Main (main) where
 
-import           System.IO                  (hPutStrLn, stderr)
-
-import           TelegramApi          (Chat (chtId), Message (msgChat, msgText),
-                                       Update (updMessage, updUpdate_id),
-                                       getLastMessages, sendMessage)
-import           Tools                (readParam, writeParam)
+import           Control.Concurrent      (threadDelay)
+import           Data.Foldable           (for_)
+import           Data.Text               (pack)
+import           Network.HTTP.Client     (Manager, newManager)
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Safe                    (lastMay)
+import           Tools                   (loadOffset, loadToken, putLog,
+                                          saveOffset)
+import           Web.Telegram.API.Bot    (Chat (..), Message (..),
+                                          Response (..), Token (..),
+                                          Update (..), getUpdates, sendMessage,
+                                          sendMessageRequest)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
 updateIdFile = "update_id.txt"
 
--- | Puts message in log
-putLog :: String -> IO()
-putLog = hPutStrLn stderr
+-- | time which thread sleeps after catching error
+timeout :: Int
+timeout = 5000
 
-processUpdates
-    :: String -- ^ Token
-    -> [Update] -- ^ List of updates
-    -> Maybe Int -- ^ Offset (current update id)
-    -> IO (Maybe Int) -- ^ New offset
-processUpdates token updates offset = do
-    case updates of
-        []   -> case offset of
-            Nothing -> pure offset
-            Just a  -> pure (Just a)
-        x:xs -> do
-            case updMessage x of
-                Just message -> do
-                    _ <- sendMessage
-                        token
-                        (getMessageText message)
-                        (chtId (msgChat message))
-                    pure()
-                Nothing      -> pure ()
-            writeParam updateIdFile (updUpdate_id x)
-            processUpdates token xs (Just (updUpdate_id x + 1))
-  where
-    getMessageText a = case msgText a of
-        Nothing      -> ""
-        Just message -> message
-
+handleMessage :: Token -> Manager -> Update -> IO ()
+handleMessage token manager update = do
+    case message of
+        Just Message{chat = Chat{chat_id}, text = (Just text)} -> do
+            res <- sendMessage
+                token
+                (sendMessageRequest (pack $ show chat_id) text)
+                manager
+            case res of
+                Left e  -> do
+                    putLog ("Message request failed. " ++ (show e))
+                    threadDelay timeout
+                    handleMessage token manager update
+                Right _ -> do
+                    saveOffset updateIdFile update_id
+        _ -> pure()
+  where Update{update_id, message} = update
 bot
-    :: String -- ^ Token
+    :: Token
     -> Maybe Int -- ^ Offset (update id)
+    -> Manager
     -> IO ()
-bot token curOffset = do
-    mUpdates <- getLastMessages token curOffset
+bot token curOffset manager = do
+    mUpdates <- getUpdates token curOffset Nothing Nothing manager
     case mUpdates of
-        Nothing -> do
-            bot token curOffset
-        Just updates  -> do
-            newOffset <- processUpdates token updates curOffset
-            bot token newOffset
+        Right Response{result} -> do
+            for_ result (handleMessage token manager)
+            case (lastMay result) of
+                Just Update{update_id} -> do
+                    let newOffset = update_id + 1
+                    bot token (Just newOffset) manager
+                Nothing    -> bot token curOffset manager
+        Left uError    -> do
+            putLog (show uError)
+            threadDelay timeout
+            bot token curOffset manager
 
 main :: IO ()
 main = do
-    offset <- readParam updateIdFile
-    tokenFromFile  <- readParam tokenFile
-    case tokenFromFile of
-        Just token -> bot token offset
-        Nothing    -> putLog ("Error opening " ++ tokenFile ++ "file.")
+    offset   <- loadOffset updateIdFile
+    token    <- loadToken tokenFile
+    manager  <- newManager tlsManagerSettings
+    bot token offset manager
   where tokenFile = "token.txt"

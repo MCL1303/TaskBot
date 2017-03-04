@@ -1,17 +1,33 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Tools
 (
     -- * deriving tools
     drvJS,
     -- * I/O tools
-    readParam,
-    writeParam
+    loadOffset,
+    loadToken,
+    saveOffset,
+    -- * Log tool
+    putLog
 ) where
 
-import           Control.Exception          (IOException, try)
+import           Control.Exception          (IOException, throwIO, try)
 import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
                                              defaultOptions, deriveJSON)
 import           Data.Char                  (toLower)
+import           Data.Monoid                ((<>))
+import           Data.Text                  (Text, strip)
+import qualified Data.Text.IO               as Text
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
+import           System.IO                  (IOMode (ReadWriteMode),
+                                             hGetContents, hPutStrLn, openFile,
+                                             stderr)
+import           Web.Telegram.API.Bot       (Token (Token))
+
+-- | Puts message in log
+putLog :: String -> IO()
+putLog errorMessage = hPutStrLn stderr errorMessage
 
 drvJS :: Name -> Q [Dec]
 drvJS bm = deriveJSON options bm
@@ -21,14 +37,25 @@ drvJS bm = deriveJSON options bm
         , constructorTagModifier = map toLower
         }
 
-readParam :: (Read a) => String -> IO (Maybe a)
-readParam fileName = do
-    result <- try (readFile fileName) :: IO (Either IOException String)
-    case (result) of
-        Right fileParam -> pure (Just $ read fileParam)
-        Left exception  -> do
-            print exception
-            pure Nothing
+loadToken :: FilePath -> IO Token
+loadToken fileName = do
+    eToken <- try (Text.readFile fileName) :: IO (Either IOException Text)
+    case eToken of
+        Right rawToken -> pure (Token ("bot" <> (strip rawToken)))
+        Left e         -> do
+            putLog ("Error reading offset from " ++ fileName)
+            throwIO e
 
-writeParam :: (Show a) => String -> a -> IO ()
-writeParam fileName param = writeFile fileName (show param)
+loadOffset :: FilePath -> IO (Maybe Int)
+loadOffset fileName = do
+    eOffset <- try (readOffset) :: IO (Either IOException String)
+    case eOffset of
+        Right offsetString -> pure (read offsetString)
+        Left  e            -> do
+            putLog (show e)
+            pure Nothing
+  where
+    readOffset = openFile fileName ReadWriteMode >>= hGetContents
+
+saveOffset :: FilePath -> Int -> IO ()
+saveOffset fileName offset = writeFile fileName (show offset)
