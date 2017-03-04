@@ -8,7 +8,7 @@ import           Data.Text               (pack)
 import           Network.HTTP.Client     (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Safe                    (lastMay)
-import           Tools                   (putLog, loadOffset, loadToken,
+import           Tools                   (loadOffset, loadToken, putLog,
                                           saveOffset)
 import           Web.Telegram.API.Bot    (Chat (..), Message (..),
                                           Response (..), Token (..),

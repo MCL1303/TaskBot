@@ -16,11 +16,14 @@ import           Control.Exception          (IOException, try)
 import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
                                              defaultOptions, deriveJSON)
 import           Data.Char                  (toLower)
-import           Data.Text                  (pack, strip)
 import           Data.Monoid                ((<>))
+import           Data.Text                  (Text, strip)
+import qualified Data.Text.IO               as Text
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.Exit                (exitFailure)
-import           System.IO                  (hPutStrLn, stderr, openFile, IOMode(ReadWriteMode), hGetContents)
+import           System.IO                  (IOMode (ReadWriteMode),
+                                             hGetContents, hPutStrLn, openFile,
+                                             stderr)
 import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
@@ -37,9 +40,9 @@ drvJS bm = deriveJSON options bm
 
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
-    eToken <- try (readFile fileName) :: IO (Either IOException String)
+    eToken <- try (Text.readFile fileName) :: IO (Either IOException Text)
     case eToken of
-        Right rawToken -> pure (Token ("bot" <> strip (pack (rawToken))))
+        Right rawToken -> pure (Token ("bot" <> (strip rawToken)))
         Left e         -> do
             putLog ("Error reading offset from " ++ fileName)
             putLog (show e)
@@ -47,12 +50,14 @@ loadToken fileName = do
 
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName = do
-    eOffset <- try (openFile fileName ReadWriteMode >>= hGetContents) :: IO (Either IOException String)
+    eOffset <- try (readOffset) :: IO (Either IOException String)
     case eOffset of
         Right offsetString -> pure (read offsetString)
         Left  e            -> do
             putLog (show e)
             pure Nothing
+  where
+    readOffset = openFile fileName ReadWriteMode >>= hGetContents
 
 saveOffset :: FilePath -> Int -> IO ()
 saveOffset fileName offset = writeFile fileName (show offset)
