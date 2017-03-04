@@ -12,7 +12,7 @@ module Tools
     putLog
 ) where
 
-import           Control.Exception          (IOException, try)
+import           Control.Exception          (IOException, throwIO, try)
 import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
                                              defaultOptions, deriveJSON)
 import           Data.Char                  (toLower)
@@ -20,7 +20,6 @@ import           Data.Monoid                ((<>))
 import           Data.Text                  (Text, strip)
 import qualified Data.Text.IO               as Text
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
-import           System.Exit                (exitFailure)
 import           System.IO                  (IOMode (ReadWriteMode),
                                              hGetContents, hPutStrLn, openFile,
                                              stderr)
@@ -45,8 +44,7 @@ loadToken fileName = do
         Right rawToken -> pure (Token ("bot" <> (strip rawToken)))
         Left e         -> do
             putLog ("Error reading offset from " ++ fileName)
-            putLog (show e)
-            exitFailure
+            throwIO e
 
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName = do

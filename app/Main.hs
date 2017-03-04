@@ -25,7 +25,6 @@ timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
 handleMessage token manager update = do
-    let Update{update_id, message} = update
     case message of
         Just Message{chat = Chat{chat_id}, text = (Just text)} -> do
             res <- sendMessage
@@ -40,7 +39,7 @@ handleMessage token manager update = do
                 Right _ -> do
                     saveOffset updateIdFile update_id
         _ -> pure()
-
+  where Update{update_id, message} = update
 bot
     :: Token
     -> Maybe Int -- ^ Offset (update id)
