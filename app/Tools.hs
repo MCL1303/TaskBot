@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Tools
 (
     -- * deriving tools
@@ -15,9 +17,10 @@ import           Data.Aeson.TH              (Options (constructorTagModifier, fi
                                              defaultOptions, deriveJSON)
 import           Data.Char                  (toLower)
 import           Data.Text                  (pack, strip)
+import           Data.Monoid                ((<>))
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.Exit                (exitFailure)
-import           System.IO                  (hPutStrLn, stderr)
+import           System.IO                  (FilePath, hPutStrLn, stderr)
 import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
@@ -32,30 +35,24 @@ drvJS bm = deriveJSON options bm
         , constructorTagModifier = map toLower
         }
 
-readToken :: String -> IO Token
+readToken :: FilePath -> IO Token
 readToken fileName = do
-    eToken <- try (readFile fileName) :: IO(Either IOException String)
+    eToken <- try (readFile fileName) :: IO (Either IOException String)
     case eToken of
-        Right token -> pure (Token(strip (pack ("bot" ++ token))))
-        Left e      -> do
+        Right rawToken -> pure (Token ("bot" <> strip (pack (rawToken))))
+        Left e         -> do
             putLog ("Error reading offset from " ++ fileName)
             putLog (show e)
             exitFailure
 
-readOffset :: String -> IO (Maybe Int)
+readOffset :: FilePath -> IO (Maybe Int)
 readOffset fileName = do
-    eOffset <- try (readFile fileName) :: IO(Either IOException String)
+    eOffset <- try (readFile fileName) :: IO (Either IOException String)
     case eOffset of
-        Right offsetString -> pure(read offsetString)
+        Right offsetString -> pure (read offsetString)
         Left  e            -> do
             putLog(show e)
             pure Nothing
 
-saveOffset :: String -> Int -> IO ()
+saveOffset :: FilePath -> Int -> IO ()
 saveOffset fileName offset = writeFile fileName (show offset)
-   {- case result of
-        Right _ -> pure ()
-        Left e  -> do
-            putLog("Error saving offset into " ++ fileName)
-            putLog(show e)
-            exitFailure-}

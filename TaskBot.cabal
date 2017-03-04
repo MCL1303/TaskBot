@@ -20,7 +20,6 @@ executable TaskBot-exe
   build-depends:       aeson
                      , base
                      , bytestring
-                     , classy-prelude
                      , HTTP
                      , http-client
                      , http-client-tls

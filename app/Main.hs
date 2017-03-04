@@ -2,9 +2,9 @@
 
 module Main (main) where
 
-import           ClassyPrelude           (tshow)
 import           Control.Concurrent      (threadDelay)
 import           Data.Foldable           (for_)
+import           Data.Text               (pack)
 import           Network.HTTP.Client     (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Safe                    (lastMay)
@@ -19,6 +19,10 @@ import           Web.Telegram.API.Bot    (Chat (..), Message (..),
 updateIdFile :: String
 updateIdFile = "update_id.txt"
 
+-- | time which thread sleeps after catching error
+timeout :: Int
+timeout = 5000
+
 handleMessage :: Token -> Manager -> Update -> IO ()
 handleMessage token manager Update{update_id, message} = do
     case message of
@@ -27,7 +31,7 @@ handleMessage token manager Update{update_id, message} = do
                 Just jText -> do
                     res <- sendMessage
                         token
-                        (sendMessageRequest (tshow chat_id) jText)
+                        (sendMessageRequest (pack $ show chat_id) jText)
                         manager
                     case res of
                         Left e  ->
@@ -54,7 +58,7 @@ bot token curOffset manager = do
                 Nothing    -> bot token curOffset manager
         Left uError    -> do
             putLog (show uError)
-            threadDelay 5000
+            threadDelay
             bot token curOffset manager
 
 main :: IO ()
