@@ -25,6 +25,13 @@ executable TaskBot-exe
                      , http-client-tls
                      , http-conduit
                      , http-types
+                     , monad-control
+                     , monad-logger
+                     , mtl
+                     , persistent
+                     , persistent-sqlite
+                     , persistent-template
+                     , resourcet
                      , safe
                      , telegram-api
                      , template-haskell

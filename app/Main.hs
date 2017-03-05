@@ -24,7 +24,7 @@ timeout :: Int
 timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
-handleMessage token manager update = do
+handleMessage token manager update =
     case message of
         Just Message{chat = Chat{chat_id}, text = (Just text)} -> do
             res <- sendMessage
@@ -33,13 +33,14 @@ handleMessage token manager update = do
                 manager
             case res of
                 Left e  -> do
-                    putLog ("Message request failed. " ++ (show e))
+                    putLog ("Message request failed. " ++ show e)
                     threadDelay timeout
                     handleMessage token manager update
-                Right _ -> do
+                Right _ ->
                     saveOffset updateIdFile update_id
-        _ -> pure()
+        _ -> pure ()
   where Update{update_id, message} = update
+
 bot
     :: Token
     -> Maybe Int -- ^ Offset (update id)
@@ -50,7 +51,7 @@ bot token curOffset manager = do
     case mUpdates of
         Right Response{result} -> do
             for_ result (handleMessage token manager)
-            case (lastMay result) of
+            case lastMay result of
                 Just Update{update_id} -> do
                     let newOffset = update_id + 1
                     bot token (Just newOffset) manager
