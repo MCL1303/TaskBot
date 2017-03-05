@@ -27,6 +27,7 @@ share
     [persistLowerCase|
         User
             telegramId  Int32
+            UniqueTelegramId telegramId
         Note
             text        Text
             owner       UserId

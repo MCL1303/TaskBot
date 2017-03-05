@@ -6,7 +6,7 @@ import           Control.Concurrent      (threadDelay)
 import           Data.Foldable           (for_)
 import           Data.Text               (pack)
 import           Database.Persist        (Entity (..), SelectOpt (LimitTo),
-                                          insert_, selectList, upsert, (==.))
+                                          insertBy, insert_, selectList, (==.))
 import           Network.HTTP.Client     (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Safe                    (lastMay)
@@ -35,11 +35,11 @@ handleMessage token manager update =
         Just Message{chat, text = Just text, from = Just user} -> do
             let Chat{chat_id} = chat
                 Tg.User{user_id} = user
-            uid <- runDB $ do
-                Entity uid _ <-
-                    upsert DB.User{userTelegramId = fromIntegral user_id} []
-                insert_ Note{noteText = text, noteOwner = uid}
-                pure uid
+            uid <-
+                runDB $
+                    either entityKey id <$>
+                    insertBy DB.User{userTelegramId = fromIntegral user_id}
+            runDB $ insert_ Note{noteText = text, noteOwner = uid}
             notes <-
                 fmap (map entityVal) . runDB $
                     selectList [NoteOwner ==. uid] [LimitTo 3]
@@ -53,11 +53,13 @@ handleMessage token manager update =
                         putLog $ "Message request failed. " ++ show e
                         threadDelay timeout)
             saveOffset updateIdFile update_id
-        _ -> pure ()
+        Just msg ->
+            putLog $ "unhandled " ++ show msg
+        Nothing ->
+            putLog $ "unhandled " ++ show update
   where Update{update_id, message} = update
 
-bot
-    :: Token
+bot :: Token
     -> Maybe Int -- ^ Offset (update id)
     -> Manager
     -> IO ()
