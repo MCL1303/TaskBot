@@ -7,4 +7,4 @@ main = do
     token <- getLine
     messageText <- getLine
     mes <- sendMessage token messageText
-    print $ mes
+    print mes
