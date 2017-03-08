@@ -2,8 +2,6 @@
 
 module Tools
 (
-    -- * deriving tools
-    drvJS,
     -- * I/O tools
     loadOffset,
     loadToken,
@@ -14,30 +12,19 @@ module Tools
     untilRight
 ) where
 
-import           Control.Exception          (IOException, throwIO, try)
-import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
-                                             defaultOptions, deriveJSON)
-import           Data.Char                  (toLower)
-import           Data.Monoid                ((<>))
-import           Data.Text                  (Text, strip)
-import qualified Data.Text.IO               as Text
-import           Language.Haskell.TH.Syntax (Dec, Name, Q)
-import           System.IO                  (IOMode (ReadWriteMode),
-                                             hGetContents, hPutStrLn, openFile,
-                                             stderr)
-import           Web.Telegram.API.Bot       (Token (Token))
+import           Control.Exception    (IOException, throwIO, try)
+import           Data.Aeson.TH        (Options (constructorTagModifier, fieldLabelModifier),
+                                       defaultOptions, deriveJSON)
+import           Data.Monoid          ((<>))
+import           Data.Text            (Text, strip)
+import qualified Data.Text.IO         as Text
+import           System.IO            (IOMode (ReadWriteMode), hGetContents,
+                                       hPutStrLn, openFile, stderr)
+import           Web.Telegram.API.Bot (Token (Token))
 
 -- | Puts message in log
 putLog :: String -> IO()
 putLog errorMessage = hPutStrLn stderr errorMessage
-
-drvJS :: Name -> Q [Dec]
-drvJS bm = deriveJSON options bm
-  where
-    options = defaultOptions
-        { fieldLabelModifier = drop 3 . map toLower
-        , constructorTagModifier = map toLower
-        }
 
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
@@ -52,7 +39,7 @@ loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName = do
     eOffset <- try (readOffset) :: IO (Either IOException String)
     case eOffset of
-        Right offsetString -> pure (read offsetString)
+        Right offsetString -> pure (Just (read offsetString))
         Left  e            -> do
             putLog (show e)
             pure Nothing
