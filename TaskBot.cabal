@@ -25,12 +25,19 @@ executable TaskBot-exe
                      , http-client-tls
                      , http-conduit
                      , http-types
+                     , monad-control
+                     , monad-logger
+                     , mtl
+                     , persistent
+                     , persistent-sqlite
+                     , persistent-template
+                     , resourcet
                      , safe
                      , telegram-api
                      , template-haskell
                      , text
   default-language:    Haskell2010
-  other-modules:       Tools
+  other-modules:       DB, Tools
 
 test-suite TaskBot-test
   type:                exitcode-stdio-1.0

@@ -5,15 +5,21 @@ module Main (main) where
 import           Control.Concurrent      (threadDelay)
 import           Data.Foldable           (for_)
 import           Data.Text               (pack)
+import           Database.Persist        (Entity (..), SelectOpt (LimitTo),
+                                          insertBy, insert_, selectList, (==.))
 import           Network.HTTP.Client     (Manager, newManager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Safe                    (lastMay)
+import           Web.Telegram.API.Bot    as Tg (Chat (..), Message (..),
+                                                Response (..), Token (..),
+                                                Update (..), User (..),
+                                                getUpdates, sendMessage,
+                                                sendMessageRequest)
+
+import           DB                      (EntityField (NoteOwner), Note (..),
+                                          User (..), runDB)
 import           Tools                   (loadOffset, loadToken, putLog,
-                                          saveOffset)
-import           Web.Telegram.API.Bot    (Chat (..), Message (..),
-                                          Response (..), Token (..),
-                                          Update (..), getUpdates, sendMessage,
-                                          sendMessageRequest)
+                                          saveOffset, untilRight)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
@@ -24,24 +30,36 @@ timeout :: Int
 timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
-handleMessage token manager update = do
+handleMessage token manager update =
     case message of
-        Just Message{chat = Chat{chat_id}, text = (Just text)} -> do
-            res <- sendMessage
-                token
-                (sendMessageRequest (pack $ show chat_id) text)
-                manager
-            case res of
-                Left e  -> do
-                    putLog ("Message request failed. " ++ (show e))
-                    threadDelay timeout
-                    handleMessage token manager update
-                Right _ -> do
-                    saveOffset updateIdFile update_id
-        _ -> pure()
+        Just Message{chat, text = Just text, from = Just user} -> do
+            let Chat{chat_id} = chat
+                Tg.User{user_id} = user
+            uid <-
+                runDB $
+                    either entityKey id <$>
+                    insertBy DB.User{userTelegramId = fromIntegral user_id}
+            runDB $ insert_ Note{noteText = text, noteOwner = uid}
+            notes <-
+                fmap (map entityVal) . runDB $
+                    selectList [NoteOwner ==. uid] [LimitTo 3]
+            for_ notes $ \Note{noteText} ->
+                untilRight
+                    (sendMessage
+                        token
+                        (sendMessageRequest (pack $ show chat_id) noteText)
+                        manager)
+                    (\e -> do
+                        putLog $ "Message request failed. " ++ show e
+                        threadDelay timeout)
+            saveOffset updateIdFile update_id
+        Just msg ->
+            putLog $ "unhandled " ++ show msg
+        Nothing ->
+            putLog $ "unhandled " ++ show update
   where Update{update_id, message} = update
-bot
-    :: Token
+
+bot :: Token
     -> Maybe Int -- ^ Offset (update id)
     -> Manager
     -> IO ()
@@ -50,7 +68,7 @@ bot token curOffset manager = do
     case mUpdates of
         Right Response{result} -> do
             for_ result (handleMessage token manager)
-            case (lastMay result) of
+            case lastMay result of
                 Just Update{update_id} -> do
                     let newOffset = update_id + 1
                     bot token (Just newOffset) manager

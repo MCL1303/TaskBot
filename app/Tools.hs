@@ -9,7 +9,9 @@ module Tools
     loadToken,
     saveOffset,
     -- * Log tool
-    putLog
+    putLog,
+    -- * Control flow
+    untilRight
 ) where
 
 import           Control.Exception          (IOException, throwIO, try)
@@ -59,3 +61,13 @@ loadOffset fileName = do
 
 saveOffset :: FilePath -> Int -> IO ()
 saveOffset fileName offset = writeFile fileName (show offset)
+
+untilRight :: IO (Either e a) -> (e -> IO ()) -> IO a
+untilRight body handler = do
+    res <- body
+    case res of
+        Left e -> do
+            handler e
+            untilRight body handler
+        Right a ->
+            pure a
