@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Tools
 (
@@ -14,12 +15,13 @@ module Tools
     untilRight
 ) where
 
-import           Control.Exception          (IOException, throwIO, try)
+import           Control.Exception          (Exception, IOException, catch,
+                                             handle, throwIO)
 import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
                                              defaultOptions, deriveJSON)
 import           Data.Char                  (toLower)
 import           Data.Monoid                ((<>))
-import           Data.Text                  (Text, strip)
+import           Data.Text                  (strip)
 import qualified Data.Text.IO               as Text
 import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.IO                  (IOMode (ReadWriteMode),
@@ -29,35 +31,40 @@ import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
 putLog :: String -> IO()
-putLog errorMessage = hPutStrLn stderr errorMessage
+putLog = hPutStrLn stderr
 
 drvJS :: Name -> Q [Dec]
-drvJS bm = deriveJSON options bm
+drvJS = deriveJSON options
   where
     options = defaultOptions
         { fieldLabelModifier = drop 3 . map toLower
         , constructorTagModifier = map toLower
         }
 
+data TokenLoadException = TokenLoadException
+    {tle_cause :: IOException, tle_file :: FilePath}
+    deriving Show
+instance Exception TokenLoadException
+
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
-    eToken <- try (Text.readFile fileName) :: IO (Either IOException Text)
-    case eToken of
-        Right rawToken -> pure (Token ("bot" <> (strip rawToken)))
-        Left e         -> do
-            putLog ("Error reading offset from " ++ fileName)
-            throwIO e
+    rawToken <- Text.readFile fileName `catch` handleReadFile
+    pure . Token $ "bot" <> strip rawToken
+  where
+    handleReadFile e =
+        throwIO TokenLoadException{tle_cause = e, tle_file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
-loadOffset fileName = do
-    eOffset <- try (readOffset) :: IO (Either IOException String)
-    case eOffset of
-        Right offsetString -> pure (read offsetString)
-        Left  e            -> do
-            putLog (show e)
-            pure Nothing
+loadOffset fileName =
+    handle handleReadFile $ do
+        offsetString <- readWritableFile
+        pure $ read offsetString
   where
-    readOffset = openFile fileName ReadWriteMode >>= hGetContents
+    readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
+
+    handleReadFile (e :: IOException) = do
+        putLog $ show e
+        pure Nothing
 
 saveOffset :: FilePath -> Int -> IO ()
 saveOffset fileName offset = writeFile fileName (show offset)
