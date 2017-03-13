@@ -25,11 +25,15 @@ before_install:
 
 matrix:
   include:
-    - compiler: hlint build and test
+    - compiler: build and test
       install:
         # Build dependencies
-        - $stack build hlint --test --only-dependencies
+        - $stack build --test --only-dependencies
       script:
         # Build the package, its tests, and its docs and run the tests
         - $stack test --pedantic --haddock --no-haddock-deps
-        - $stack exec -- hlint .
+    - compiler: hlint
+      install:
+        - stack build hlint
+      script:
+        - stack exec -- hlint .
