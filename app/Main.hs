@@ -4,6 +4,7 @@ module Main (main) where
 
 import           Control.Concurrent      (threadDelay)
 import           Data.Foldable           (for_)
+import           Data.Monoid             ((<>))
 import           Data.Text               (pack)
 import           Database.Persist        (Entity (..), SelectOpt (LimitTo),
                                           insertBy, insert_, selectList, (==.))
@@ -41,7 +42,7 @@ handleMessage token manager update =
                     insertBy DB.User{userTelegramId = fromIntegral user_id}
             runDB $ insert_ Note{noteText = text, noteOwner = uid}
             notes <-
-                fmap (map entityVal) . runDB $
+                fmap (fmap entityVal) . runDB $
                     selectList [NoteOwner ==. uid] [LimitTo 3]
             for_ notes $ \Note{noteText} ->
                 untilRight
@@ -50,13 +51,13 @@ handleMessage token manager update =
                         (sendMessageRequest (pack $ show chat_id) noteText)
                         manager)
                     (\e -> do
-                        putLog $ "Message request failed. " ++ show e
+                        putLog $ "Message request failed. " <> show e
                         threadDelay timeout)
             saveOffset updateIdFile update_id
         Just msg ->
-            putLog $ "unhandled " ++ show msg
+            putLog $ "unhandled " <> show msg
         Nothing ->
-            putLog $ "unhandled " ++ show update
+            putLog $ "unhandled " <> show update
   where Update{update_id, message} = update
 
 bot :: Token

@@ -32,3 +32,8 @@ matrix:
       script:
         # Build the package, its tests, and its docs and run the tests
         - $stack test --pedantic --haddock --no-haddock-deps
+    - compiler: hlint
+      install:
+        - stack build hlint
+      script:
+        - stack exec -- hlint .
