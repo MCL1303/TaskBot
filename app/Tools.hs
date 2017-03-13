@@ -13,8 +13,6 @@ module Tools
 ) where
 
 import           Control.Exception    (IOException, throwIO, try)
-import           Data.Aeson.TH        (Options (constructorTagModifier, fieldLabelModifier),
-                                       defaultOptions, deriveJSON)
 import           Data.Monoid          ((<>))
 import           Data.Text            (Text, strip)
 import qualified Data.Text.IO         as Text
