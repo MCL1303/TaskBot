@@ -2,8 +2,6 @@
 
 module Tools
 (
-    -- * deriving tools
-    drvJS,
     -- * I/O tools
     loadOffset,
     loadToken,
@@ -15,13 +13,9 @@ module Tools
 ) where
 
 import           Control.Exception          (IOException, throwIO, try)
-import           Data.Aeson.TH              (Options (constructorTagModifier, fieldLabelModifier),
-                                             defaultOptions, deriveJSON)
-import           Data.Char                  (toLower)
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text, strip)
 import qualified Data.Text.IO               as Text
-import           Language.Haskell.TH.Syntax (Dec, Name, Q)
 import           System.IO                  (IOMode (ReadWriteMode),
                                              hGetContents, hPutStrLn, openFile,
                                              stderr)
@@ -31,14 +25,6 @@ import           Web.Telegram.API.Bot       (Token (Token))
 putLog :: String -- ^ Error message
        -> IO()
 putLog = hPutStrLn stderr
-
-drvJS :: Name -> Q [Dec]
-drvJS = deriveJSON options
-  where
-    options = defaultOptions
-        { fieldLabelModifier = drop 3 . fmap toLower
-        , constructorTagModifier = fmap toLower
-        }
 
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
