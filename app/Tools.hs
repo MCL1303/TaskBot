@@ -22,21 +22,22 @@ import           System.IO                  (IOMode (ReadWriteMode),
 import           Web.Telegram.API.Bot       (Token (Token))
 
 -- | Puts message in log
-putLog :: String -> IO()
-putLog errorMessage = hPutStrLn stderr errorMessage
+putLog :: String -- ^ Error message
+       -> IO()
+putLog = hPutStrLn stderr
 
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
     eToken <- try (Text.readFile fileName) :: IO (Either IOException Text)
     case eToken of
-        Right rawToken -> pure (Token ("bot" <> (strip rawToken)))
+        Right rawToken -> pure (Token ("bot" <> strip rawToken))
         Left e         -> do
-            putLog ("Error reading offset from " ++ fileName)
+            putLog ("Error reading offset from " <> fileName)
             throwIO e
 
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName = do
-    eOffset <- try (readOffset) :: IO (Either IOException String)
+    eOffset <- try readOffset :: IO (Either IOException String)
     case eOffset of
         Right offsetString -> pure (read offsetString)
         Left  e            -> do
