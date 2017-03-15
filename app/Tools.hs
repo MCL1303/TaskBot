@@ -1,9 +1,7 @@
-    {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Tools
 (
-    -- * deriving tools
-    drvJS,
     -- * I/O tools
     loadOffset,
     loadToken,
@@ -15,7 +13,6 @@ module Tools
 ) where
 
 import           Control.Exception          (IOException, throwIO, try)
-import           Data.Char                  (toLower)
 import           Data.Monoid                ((<>))
 import           Data.Text                  (Text, strip)
 import qualified Data.Text.IO               as Text
