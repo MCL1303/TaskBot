@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Tools
 (
@@ -12,39 +13,41 @@ module Tools
     untilRight
 ) where
 
-import           Control.Exception          (IOException, throwIO, try)
-import           Data.Monoid                ((<>))
-import           Data.Text                  (Text, strip)
-import qualified Data.Text.IO               as Text
-import           System.IO                  (IOMode (ReadWriteMode),
-                                             hGetContents, hPutStrLn, openFile,
-                                             stderr)
-import           Web.Telegram.API.Bot       (Token (Token))
+import           Control.Exception    (Exception, IOException, catch, throwIO)
+import           Data.Monoid          ((<>))
+import           Data.Text            (strip)
+import qualified Data.Text.IO         as Text
+import           System.IO            (IOMode (ReadWriteMode), hGetContents,
+                                       hPutStrLn, openFile, stderr)
+import           Web.Telegram.API.Bot (Token (Token))
 
 -- | Puts message in log
 putLog :: String -- ^ Error message
        -> IO()
 putLog = hPutStrLn stderr
 
+data TokenLoadException = TokenLoadException
+    {tle_cause :: IOException, tle_file :: FilePath}
+    deriving Show
+instance Exception TokenLoadException
+
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
-    eToken <- try (Text.readFile fileName) :: IO (Either IOException Text)
-    case eToken of
-        Right rawToken -> pure (Token ("bot" <> strip rawToken))
-        Left e         -> do
-            putLog ("Error reading offset from " <> fileName)
-            throwIO e
+    rawToken <- Text.readFile fileName `catch` handleReadFile
+    pure . Token $ "bot" <> strip rawToken
+  where
+    handleReadFile e =
+        throwIO TokenLoadException{tle_cause = e, tle_file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
-loadOffset fileName = do
-    eOffset <- try readOffset :: IO (Either IOException String)
-    case eOffset of
-        Right offsetString -> pure (read offsetString)
-        Left  e            -> do
-            putLog (show e)
-            pure Nothing
+loadOffset fileName =
+    do  offsetString <- readWritableFile
+        pure $ read offsetString
+    `catch` \(e :: IOException) -> do
+        putLog $ show e
+        pure Nothing
   where
-    readOffset = openFile fileName ReadWriteMode >>= hGetContents
+    readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
 saveOffset :: FilePath -> Int -> IO ()
 saveOffset fileName offset = writeFile fileName (show offset)
