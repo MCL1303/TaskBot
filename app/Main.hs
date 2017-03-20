@@ -19,7 +19,7 @@ import           Web.Telegram.API.Bot    as Tg (Chat (..), Message (..),
 
 import           DB                      (EntityField (NoteOwner), Note (..),
                                           User (..), runDB)
-import           Tools                   (loadOffset, loadToken, putLog,
+import           Tools                   (loadOffset, loadToken, putLog, readCommand,
                                           saveOffset, untilRight)
 
 -- | Path to file which contains current update id
@@ -31,28 +31,33 @@ timeout :: Int
 timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
-handleMessage token manager update =
+handleMessage token manager update = do
     case message of
         Just Message{chat, text = Just text, from = Just user} -> do
             let Chat{chat_id} = chat
                 Tg.User{user_id} = user
-            uid <-
-                runDB $
-                    either entityKey id <$>
-                    insertBy DB.User{userTelegramId = fromIntegral user_id}
-            runDB $ insert_ Note{noteText = text, noteOwner = uid}
-            notes <-
-                fmap (fmap entityVal) . runDB $
-                    selectList [NoteOwner ==. uid] [LimitTo 3]
-            for_ notes $ \Note{noteText} ->
-                untilRight
-                    (sendMessage
-                        token
-                        (sendMessageRequest (pack $ show chat_id) noteText)
-                        manager)
-                    (\e -> do
-                        putLog $ "Message request failed. " <> show e
-                        threadDelay timeout)
+                mCommand = readCommand text
+            case mCommand of
+                Just command -> case command of
+                    "show-list" -> do
+                        uid <-
+                            runDB $
+                                either entityKey id <$>
+                                insertBy DB.User{userTelegramId = fromIntegral user_id}
+                        runDB $ insert_ Note{noteText = text, noteOwner = uid}
+                        notes <-
+                            fmap (fmap entityVal) . runDB $
+                                selectList [NoteOwner ==. uid] [LimitTo 3]
+                        for_ notes $ \Note{noteText} ->
+                            untilRight
+                                (sendMessage
+                                    token
+                                    (sendMessageRequest (pack $ show chat_id) noteText)
+                                    manager)
+                                (\e -> do
+                                    putLog $ "Message request failed. " <> show e
+                                    threadDelay timeout)
+                Nothing -> pure()
             saveOffset updateIdFile update_id
         Just msg ->
             putLog $ "unhandled " <> show msg
