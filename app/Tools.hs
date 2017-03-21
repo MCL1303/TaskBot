@@ -18,8 +18,8 @@ module Tools
 import           Control.Exception    (Exception, IOException, catch, throwIO)
 import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
-import           Data.Text            as Text (Text, head, length, pack, strip,
-                                               tail, takeWhile, uncons, unpack)
+import           Data.Text            as Text (Text, strip, takeWhile,
+                                               uncons, unpack)
 import qualified Data.Text.IO         as Text
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
@@ -68,10 +68,10 @@ untilRight body handler = do
 
 readCommand :: Text -> Maybe String
 readCommand messageText =
-    if (Text.length messageText > 1)
-      then
-        if (Text.head slashCommand == '/')
-          then Just (Text.unpack (Text.tail slashCommand))
-          else Nothing
-      else Nothing
+    case uncons slashCommand of
+        Just (tHead, tTail) ->
+            case tHead of
+                '/' -> Just (unpack tTail)
+                _   -> Nothing
+        _                   -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
