@@ -20,12 +20,12 @@ import Tools       (loadOffset, loadToken, putLog, readCommand, saveOffset)
 updateIdFile :: String
 updateIdFile = "update_id.txt"
 
--- | time which thread sleeps after catching error
+-- | Time(ms) which thread sleeps after catching error
 timeout :: Int
 timeout = 5000
 
 handleMessage :: Token -> Manager -> Update -> IO ()
-handleMessage token manager update = do
+handleMessage token manager update =
     case mMessage of
         Just message ->
             case message of
@@ -33,9 +33,9 @@ handleMessage token manager update = do
                     case readCommand text of
                         Just command ->
                             case command of
-                                "show" -> showNotes token manager message
-                                _      -> pure ()
-                        Nothing      -> do
+                                "show_notes" -> showNotes token manager message
+                                _            -> pure ()
+                        Nothing -> do
                             let Tg.User{user_id} = user
                             uid <-
                                 runDB $
