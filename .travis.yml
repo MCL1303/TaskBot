@@ -36,4 +36,4 @@ matrix:
       install:
         - stack build hlint
       script:
-        - stack exec -- hlint .h
+        - stack exec -- hlint .
