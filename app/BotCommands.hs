@@ -2,29 +2,42 @@
 
 module BotCommands
 (
-    showNotes
+    showOld,
+    addNote
 )
 where
 
 import Control.Concurrent   (threadDelay)
 import Data.Foldable        (for_)
 import Data.Monoid          ((<>))
-import Data.Text            (pack)
-import Database.Persist     (Entity (..), getByValue, SelectOpt (LimitTo),
-                             selectList, (==.))
+import Data.Text            (Text, pack)
+import Database.Persist     (Entity (..), getByValue, SelectOpt (LimitTo, Desc),
+                             selectList, (==.), insert_, insertBy)
 import Network.HTTP.Client  (Manager)
 import Web.Telegram.API.Bot as Tg (Chat (..), Message (..), Token (..),
                                    User (..), sendMessage, sendMessageRequest)
 
-import DB    (EntityField (NoteOwner), Note (..), User (..), runDB)
+import DB    (EntityField (NoteOwner, NoteId), Note (..), User (..), runDB)
 import Tools (putLog, untilRight)
 
 -- | Time(ms) which thread sleeps after catching error
 timeout :: Int
 timeout = 5000
 
-showNotes :: Token -> Manager -> Message -> IO()
-showNotes token manager message =
+sendMessageB :: Token -> Manager -> Int -> Text -> IO()
+sendMessageB token manager chat_id mesText = do
+    _ <- untilRight
+        (sendMessage
+            token
+            (sendMessageRequest (pack $ show chat_id) mesText)
+            manager)
+        (\e -> do
+            putLog $ "sendMessageB failed. " <> show e
+            threadDelay timeout)
+    pure ()
+
+showOld :: Token -> Manager -> Message -> IO()
+showOld token manager message =
     case message of
         Message{chat, from = Just user} -> do
             let Chat{chat_id} = chat
@@ -37,26 +50,43 @@ showNotes token manager message =
                     let uid = entityKey rec
                     notes <-
                         fmap (fmap entityVal) . runDB $
-                            selectList [NoteOwner ==. uid] [LimitTo 3]
+                            selectList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
                     for_ notes $ \Note{noteText} ->
-                        untilRight
-                            (sendMessage
-                                token
-                                (sendMessageRequest (pack $ show chat_id) noteText)
-                                manager)
-                            (\e -> do
-                                putLog $ "Message request failed. " <> show e
-                                threadDelay timeout)
-                Nothing   -> do
-                    _ <- untilRight
-                        (sendMessage
+                        sendMessageB
                             token
-                            (sendMessageRequest
-                                (pack $ show chat_id)
-                                (pack "You don't have any notes."))
-                            manager)
-                        (\e -> do
-                            putLog $ "Message request failed. " <> show e
-                            threadDelay timeout)
+                            manager
+                            chat_id
+                            noteText
+                Nothing   -> do
+                    sendMessageB
+                        token
+                        manager
+                        chat_id
+                        (pack "Увы, но записей нет.")
                     pure()
-        msg -> putLog $ show msg
+        Message{chat} -> do
+            let Chat{chat_id} = chat
+            sendMessageB
+                token
+                manager
+                chat_id
+                (pack "Кто Вы такой?!")
+            putLog $ show message
+
+addNote :: Token -> Manager -> Message -> IO()
+addNote _ _ Message{from = Just user, text = Just text} = do
+    let Tg.User{user_id} = user
+    uid <-
+        runDB $
+            either entityKey id <$>
+            insertBy DB.User{userTelegramId = fromIntegral user_id}
+    runDB $ insert_ Note{noteText = text, noteOwner = uid}
+addNote token manager message = do
+    let Message{chat} = message
+        Chat{chat_id} = chat
+    putLog (show message)
+    sendMessageB
+        token
+        manager
+        chat_id
+        (pack "Кто Вы Такой?")

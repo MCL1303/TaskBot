@@ -69,9 +69,6 @@ untilRight body handler = do
 readCommand :: Text -> Maybe String
 readCommand messageText =
     case uncons slashCommand of
-        Just (tHead, tTail) ->
-            case tHead of
-                '/' -> Just (unpack tTail)
-                _   -> Nothing
-        _                   -> Nothing
+        Just ('/', tTail) -> Just (unpack tTail)
+        _                 -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText

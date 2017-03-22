@@ -5,15 +5,13 @@ module Main (main) where
 import Control.Concurrent      (threadDelay)
 import Data.Foldable           (for_)
 import Data.Monoid             ((<>))
-import Database.Persist        (Entity (..), insert_, insertBy)
 import Network.HTTP.Client     (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Safe                    (lastMay)
 import Web.Telegram.API.Bot    as Tg (Message (..), Response (..), Token (..),
-                                      Update (..), User(..), getUpdates)
+                                      Update (..), getUpdates)
 
-import BotCommands (showNotes)
-import DB          (Note (..), User (..), runDB)
+import BotCommands (addNote, showOld)
 import Tools       (loadOffset, loadToken, putLog, readCommand, saveOffset)
 
 -- | Path to file which contains current update id
@@ -29,19 +27,13 @@ handleMessage token manager update =
     case mMessage of
         Just message ->
             case message of
-                Message{from = Just user, text = Just text} -> do
+                Message{text = Just text} -> do
                     case readCommand text of
                         Just command ->
                             case command of
-                                "show_notes" -> showNotes token manager message
-                                _            -> pure ()
-                        Nothing -> do
-                            let Tg.User{user_id} = user
-                            uid <-
-                                runDB $
-                                    either entityKey id <$>
-                                    insertBy DB.User{userTelegramId = fromIntegral user_id}
-                            runDB $ insert_ Note{noteText = text, noteOwner = uid}
+                                "show_old" -> showOld token manager message
+                                _          -> pure ()
+                        Nothing -> addNote token manager message
                     saveOffset updateIdFile update_id
                 msg ->
                     putLog $ "unhandled " <> show msg
