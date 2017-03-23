@@ -65,7 +65,7 @@ showOld token manager message =
                         manager
                         chat_id
                         (pack "Увы, но записей нет.")
-       _ -> do
+        _ -> do
             putLog ("Edentifying user error. " <> show message)
 
 addNote :: Message -> IO()
