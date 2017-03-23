@@ -12,7 +12,8 @@ module Tools
     -- * Control flow
     untilRight,
     -- * Message recognizing
-    readCommand
+    readCommand,
+    BotCmd(..)
 ) where
 
 import           Control.Exception    (Exception, IOException, catch, throwIO)
@@ -24,6 +25,8 @@ import qualified Data.Text.IO         as Text
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
 import           Web.Telegram.API.Bot (Token (Token))
+
+data BotCmd = ShowOld | WrongCommand String
 
 -- | Puts message in log
 putLog :: String -- ^ Error message
@@ -66,9 +69,12 @@ untilRight body handler = do
         Right a ->
             pure a
 
-readCommand :: Text -> Maybe String
+readCommand :: Text -> Maybe BotCmd
 readCommand messageText =
     case uncons slashCommand of
-        Just ('/', tTail) -> Just (unpack tTail)
-        _                 -> Nothing
+        Just ('/', tTail) ->
+            case tTail of
+                "show_old"    -> Just ShowOld
+                wrongCmd -> Just (WrongCommand $ unpack wrongCmd)
+        _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText

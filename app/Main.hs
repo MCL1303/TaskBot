@@ -12,7 +12,7 @@ import Web.Telegram.API.Bot    as Tg (Message (..), Response (..), Token (..),
                                       Update (..), getUpdates)
 
 import BotCommands (addNote, showOld)
-import Tools       (loadOffset, loadToken, putLog, readCommand, saveOffset)
+import Tools       (BotCmd(..), loadOffset, loadToken, putLog, readCommand, saveOffset)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
@@ -31,8 +31,10 @@ handleMessage token manager update =
                     case readCommand text of
                         Just command ->
                             case command of
-                                "show_old" -> showOld token manager message
-                                _          -> pure ()
+                                ShowOld               ->
+                                    showOld token manager message
+                                WrongCommand wrongCmd ->
+                                    putLog (cmdErr wrongCmd)
                         Nothing -> addNote token manager message
                     saveOffset updateIdFile update_id
                 msg ->
@@ -40,6 +42,7 @@ handleMessage token manager update =
         Nothing ->
             putLog $ "unhandled " <> show update
   where
+    cmdErr c = "Wrong bot command: " <> c
     Update{update_id, message = mMessage} = update
 
 bot :: Token

@@ -50,28 +50,24 @@ showOld token manager message =
                     let uid = entityKey rec
                     notes <-
                         fmap (fmap entityVal) . runDB $
-                            selectList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
+                            selectList
+                                [NoteOwner ==. uid]
+                                [LimitTo 3, Desc NoteId]
                     for_ notes $ \Note{noteText} ->
                         sendMessageB
                             token
                             manager
                             chat_id
                             noteText
-                Nothing   -> do
+                Nothing   ->
                     sendMessageB
                         token
                         manager
                         chat_id
                         (pack "Увы, но записей нет.")
-                    pure()
         Message{chat} -> do
             let Chat{chat_id} = chat
-            sendMessageB
-                token
-                manager
-                chat_id
-                (pack "Кто Вы такой?!")
-            putLog $ show message
+            putLog ("Edentifying user error. " <> show message)
 
 addNote :: Token -> Manager -> Message -> IO()
 addNote _ _ Message{from = Just user, text = Just text} = do
@@ -84,9 +80,4 @@ addNote _ _ Message{from = Just user, text = Just text} = do
 addNote token manager message = do
     let Message{chat} = message
         Chat{chat_id} = chat
-    putLog (show message)
-    sendMessageB
-        token
-        manager
-        chat_id
-        (pack "Кто Вы Такой?")
+    putLog ("Edentifying user error. " <> show message)
