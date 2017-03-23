@@ -69,7 +69,7 @@ showOld token manager message =
             putLog ("Edentifying user error. " <> show message)
 
 addNote :: Message -> IO()
-addNote _ _ Message{from = Just user, text = Just text} = do
+addNote Message{from = Just user, text = Just text} = do
     let Tg.User{user_id} = user
     uid <-
         runDB $
