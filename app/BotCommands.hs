@@ -77,5 +77,4 @@ addNote Message{from = Just user, text = Just text} = do
             insertBy DB.User{userTelegramId = fromIntegral user_id}
     runDB $ insert_ Note{noteText = text, noteOwner = uid}
 addNote message = do
-    let Message{chat} = message
     putLog ("Edentifying user error. " <> show message)
