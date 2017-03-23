@@ -35,7 +35,7 @@ handleMessage token manager update =
                                     showOld token manager message
                                 WrongCommand wrongCmd ->
                                     putLog (cmdErr wrongCmd)
-                        Nothing -> addNote token manager message
+                        Nothing -> addNote message
                     saveOffset updateIdFile update_id
                 msg ->
                     putLog $ "unhandled " <> show msg

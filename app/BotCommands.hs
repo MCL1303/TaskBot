@@ -65,11 +65,10 @@ showOld token manager message =
                         manager
                         chat_id
                         (pack "Увы, но записей нет.")
-        Message{chat} -> do
-            let Chat{chat_id} = chat
+       _ -> do
             putLog ("Edentifying user error. " <> show message)
 
-addNote :: Token -> Manager -> Message -> IO()
+addNote :: Message -> IO()
 addNote _ _ Message{from = Just user, text = Just text} = do
     let Tg.User{user_id} = user
     uid <-
@@ -77,7 +76,6 @@ addNote _ _ Message{from = Just user, text = Just text} = do
             either entityKey id <$>
             insertBy DB.User{userTelegramId = fromIntegral user_id}
     runDB $ insert_ Note{noteText = text, noteOwner = uid}
-addNote token manager message = do
+addNote message = do
     let Message{chat} = message
-        Chat{chat_id} = chat
     putLog ("Edentifying user error. " <> show message)
