@@ -55,7 +55,7 @@ showOld token manager chatId userId = do
             for_ notes $ \Note{noteText} ->
                 sendMessageB token manager chatId noteText
         Nothing   ->
-            sendMessageB token manager chatId (pack "Увы и но - записей нет.")
+            sendMessageB token manager chatId (pack "Записей нет.")
 
 addNote :: Int -- ^ UserId - who wants to insert
         -> Text -- ^ Inserting note
