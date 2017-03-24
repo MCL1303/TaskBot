@@ -17,6 +17,7 @@ import           Control.Exception    (Exception, IOException, catch, throwIO)
 import           Data.Monoid          ((<>))
 import           Data.Text            (strip)
 import qualified Data.Text.IO         as Text
+import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
 import           Web.Telegram.API.Bot (Token (Token))
@@ -40,12 +41,12 @@ loadToken fileName = do
         throwIO TokenLoadException{tle_cause = e, tle_file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
-loadOffset fileName =
+loadOffset fileName = do
     do  offsetString <- readWritableFile
-        pure $ read offsetString
+        pure $ readMay offsetString
     `catch` \(e :: IOException) -> do
-        putLog $ show e
-        pure Nothing
+         putLog $ show e
+         pure Nothing
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
