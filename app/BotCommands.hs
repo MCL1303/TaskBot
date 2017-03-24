@@ -7,16 +7,18 @@ module BotCommands
 )
 where
 
-import Control.Concurrent   (threadDelay)
-import Data.Foldable        (for_)
-import Data.Monoid          ((<>))
-import Data.Text            (Text, pack)
-import Database.Persist     (Entity (..), getByValue, SelectOpt (LimitTo, Desc),
-                             selectList, (==.), insert_, insertBy)
-import Network.HTTP.Client  (Manager)
-import Web.Telegram.API.Bot as Tg (Token (..), sendMessage, sendMessageRequest)
+import Control.Concurrent     (threadDelay)
+import Data.Foldable          (for_)
+import Data.Monoid            ((<>))
+import Data.Text              (Text, pack)
+import Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
+                               getKeyByValue, insertBy, insert_, selectValList,
+                               (==.))
+import Network.HTTP.Client    (Manager)
+import Web.Telegram.API.Bot   as Tg (Token (..), sendMessage,
+                                     sendMessageRequest)
 
-import DB    (EntityField (NoteOwner, NoteId), Note (..), User (..), runDB)
+import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 import Tools (putLog, untilRight)
 
 -- | Time(ms) which thread sleeps after catching error
@@ -41,20 +43,14 @@ showOld :: Token
         -> Int -- ^ UserId - who wants to show
         -> IO ()
 showOld token manager chatId userId = do
-    mUidEntity <-
-        runDB $
-            getByValue DB.User{userTelegramId = fromIntegral userId}
-    case mUidEntity of
-        Just rec -> do
-            let uid = entityKey rec
-            notes <-
-                fmap (fmap entityVal) . runDB $
-                    selectList
-                        [NoteOwner ==. uid]
-                        [LimitTo 3, Desc NoteId]
+    mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
+    case mUid of
+        Just uid -> do
+            notes <- runDB $
+                selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
                 sendMessageB token manager chatId noteText
-        Nothing   ->
+        Nothing ->
             sendMessageB token manager chatId (pack "Записей нет.")
 
 addNote :: Int -- ^ UserId - who wants to insert
