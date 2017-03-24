@@ -42,7 +42,7 @@ handleMessage token manager update =
         _ ->
             putLog $ "unhandled " <> show update
   where
-    cmdErr c = "Wrong bot command: " ++ c
+    cmdErr c = "Wrong bot command: " <> c
     Update{update_id, message = mMessage} = update
 
 bot :: Token
