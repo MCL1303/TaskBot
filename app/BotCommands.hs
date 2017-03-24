@@ -14,8 +14,7 @@ import Data.Text            (Text, pack)
 import Database.Persist     (Entity (..), getByValue, SelectOpt (LimitTo, Desc),
                              selectList, (==.), insert_, insertBy)
 import Network.HTTP.Client  (Manager)
-import Web.Telegram.API.Bot as Tg (Chat (..), Message (..), Token (..),
-                                   User (..), sendMessage, sendMessageRequest)
+import Web.Telegram.API.Bot as Tg (Token (..), sendMessage, sendMessageRequest)
 
 import DB    (EntityField (NoteOwner, NoteId), Note (..), User (..), runDB)
 import Tools (putLog, untilRight)
