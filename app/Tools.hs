@@ -41,7 +41,7 @@ loadToken fileName = do
         throwIO TokenLoadException{tle_cause = e, tle_file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
-loadOffset fileName = do
+loadOffset fileName =
     do  offsetString <- readWritableFile
         pure $ readMay offsetString
     `catch` \(e :: IOException) -> do
