@@ -8,8 +8,8 @@ import Data.Monoid             ((<>))
 import Network.HTTP.Client     (Manager, newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Safe                    (lastMay)
-import Web.Telegram.API.Bot    as Tg (Message (..), Response (..), Token (..),
-                                      Update (..), getUpdates)
+import Web.Telegram.API.Bot    as Tg (Chat(..), getUpdates, Message (..), Response (..), Token (..),
+                                      Update (..), User(..))
 
 import BotCommands (addNote, showOld)
 import Tools       (BotCmd(..), loadOffset, loadToken, putLog, readCommand, saveOffset)
@@ -25,24 +25,24 @@ timeout = 5000
 handleMessage :: Token -> Manager -> Update -> IO ()
 handleMessage token manager update =
     case mMessage of
-        Just message ->
-            case message of
-                Message{text = Just text} -> do
-                    case readCommand text of
-                        Just command ->
-                            case command of
-                                ShowOld               ->
-                                    showOld token manager message
-                                WrongCommand wrongCmd ->
-                                    putLog (cmdErr wrongCmd)
-                        Nothing -> addNote message
-                    saveOffset updateIdFile update_id
-                msg ->
-                    putLog $ "unhandled " <> show msg
-        Nothing ->
+        Just Message{text = Just text, from = Just from, chat}-> do
+            let User{user_id} = from
+                Chat{chat_id} = chat
+            case readCommand text of
+                Just command ->
+                    case command of
+                        ShowOld ->
+                            showOld token manager chat_id user_id
+                        WrongCommand wrongCmd ->
+                            putLog (cmdErr wrongCmd)
+                Nothing -> addNote user_id text
+            saveOffset updateIdFile update_id
+        Just msg ->
+            putLog $ "unhandled " <> show msg
+        _ ->
             putLog $ "unhandled " <> show update
   where
-    cmdErr c = "Wrong bot command: " <> c
+    cmdErr c = "Wrong bot command: " ++ c
     Update{update_id, message = mMessage} = update
 
 bot :: Token

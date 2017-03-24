@@ -49,7 +49,7 @@ loadToken fileName = do
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName =
     do  offsetString <- readWritableFile
-        pure $ Just (read offsetString)
+        pure . Just $ read offsetString
     `catch` \(e :: IOException) -> do
         putLog $ show e
         pure Nothing

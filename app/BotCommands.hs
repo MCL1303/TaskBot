@@ -36,45 +36,40 @@ sendMessageB token manager chat_id mesText = do
             threadDelay timeout)
     pure ()
 
-showOld :: Token -> Manager -> Message -> IO()
-showOld token manager message =
-    case message of
-        Message{chat, from = Just user} -> do
-            let Chat{chat_id} = chat
-                Tg.User{user_id} = user
-            mUidEntity <-
-                runDB $
-                    getByValue DB.User{userTelegramId = fromIntegral user_id}
-            case mUidEntity of
-                Just rec -> do
-                    let uid = entityKey rec
-                    notes <-
-                        fmap (fmap entityVal) . runDB $
-                            selectList
-                                [NoteOwner ==. uid]
-                                [LimitTo 3, Desc NoteId]
-                    for_ notes $ \Note{noteText} ->
-                        sendMessageB
-                            token
-                            manager
-                            chat_id
-                            noteText
-                Nothing   ->
-                    sendMessageB
-                        token
-                        manager
-                        chat_id
-                        (pack "Увы, но записей нет.")
-        _ ->
-            putLog ("Edentifying user error. " <> show message)
+showOld :: Token
+        -> Manager
+        -> Int
+        -> Int
+        -> IO()
+showOld token manager chat_id user_id = do
+    mUidEntity <-
+        runDB $
+            getByValue DB.User{userTelegramId = fromIntegral user_id}
+    case mUidEntity of
+        Just rec -> do
+            let uid = entityKey rec
+            notes <-
+                fmap (fmap entityVal) . runDB $
+                    selectList
+                        [NoteOwner ==. uid]
+                        [LimitTo 3, Desc NoteId]
+            for_ notes $ \Note{noteText} ->
+                sendMessageB
+                    token
+                    manager
+                    chat_id
+                    noteText
+        Nothing   ->
+            sendMessageB
+                token
+                manager
+                chat_id
+                (pack "Увы, но записей нет.")
 
-addNote :: Message -> IO()
-addNote Message{from = Just user, text = Just text} = do
-    let Tg.User{user_id} = user
+addNote :: Int -> Text -> IO()
+addNote user_id note = do
     uid <-
         runDB $
             either entityKey id <$>
             insertBy DB.User{userTelegramId = fromIntegral user_id}
-    runDB $ insert_ Note{noteText = text, noteOwner = uid}
-addNote message =
-    putLog ("Edentifying user error. " <> show message)
+    runDB $ insert_ Note{noteText = note, noteOwner = uid}
