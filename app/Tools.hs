@@ -45,8 +45,8 @@ loadOffset fileName = do
     do  offsetString <- readWritableFile
         pure $ readMay offsetString
     `catch` \(e :: IOException) -> do
-         putLog $ show e
-         pure Nothing
+        putLog $ show e
+        pure Nothing
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
