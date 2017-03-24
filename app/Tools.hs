@@ -19,9 +19,9 @@ module Tools
 import           Control.Exception    (Exception, IOException, catch, throwIO)
 import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
-import           Data.Text            as Text (Text, strip, takeWhile,
-                                               uncons, unpack)
-import qualified Data.Text.IO         as Text (readFile)
+import           Data.Text            (Text, strip, uncons, unpack)
+import qualified Data.Text            as Text
+import qualified Data.Text.IO         as Text
 import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
