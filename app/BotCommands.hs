@@ -37,13 +37,13 @@ sendMessageB token manager chat_id mesText = do
 
 showOld :: Token
         -> Manager
-        -> Int
-        -> Int
-        -> IO()
-showOld token manager chat_id user_id = do
+        -> Int -- ^ ChatId for sending notes
+        -> Int -- ^ UserId - who wants to show
+        -> IO ()
+showOld token manager chatId userId = do
     mUidEntity <-
         runDB $
-            getByValue DB.User{userTelegramId = fromIntegral user_id}
+            getByValue DB.User{userTelegramId = fromIntegral userId}
     case mUidEntity of
         Just rec -> do
             let uid = entityKey rec
@@ -53,22 +53,16 @@ showOld token manager chat_id user_id = do
                         [NoteOwner ==. uid]
                         [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
-                sendMessageB
-                    token
-                    manager
-                    chat_id
-                    noteText
+                sendMessageB token manager chatId noteText
         Nothing   ->
-            sendMessageB
-                token
-                manager
-                chat_id
-                (pack "Увы, но записей нет.")
+            sendMessageB token manager chatId (pack "Увы и но - записей нет.")
 
-addNote :: Int -> Text -> IO()
-addNote user_id note = do
+addNote :: Int -- ^ UserId - who wants to insert
+        -> Text -- ^ Inserting note
+        -> IO ()
+addNote userId note = do
     uid <-
         runDB $
             either entityKey id <$>
-            insertBy DB.User{userTelegramId = fromIntegral user_id}
+            insertBy DB.User{userTelegramId = fromIntegral userId}
     runDB $ insert_ Note{noteText = note, noteOwner = uid}
