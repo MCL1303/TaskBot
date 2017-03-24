@@ -37,7 +37,7 @@ executable TaskBot-exe
                      , template-haskell
                      , text
   default-language:    Haskell2010
-  other-modules:       DB, Tools
+  other-modules:       BotCommands, DB, Tools
 
 test-suite TaskBot-test
   type:                exitcode-stdio-1.0

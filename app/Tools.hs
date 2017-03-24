@@ -10,17 +10,24 @@ module Tools
     -- * Log tool
     putLog,
     -- * Control flow
-    untilRight
+    untilRight,
+    -- * Message recognizing
+    readCommand,
+    BotCmd(..)
 ) where
 
 import           Control.Exception    (Exception, IOException, catch, throwIO)
+import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
-import           Data.Text            (strip)
-import qualified Data.Text.IO         as Text
+import           Data.Text            as Text (Text, strip, takeWhile,
+                                               uncons, unpack)
+import qualified Data.Text.IO         as Text (readFile)
 import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
 import           Web.Telegram.API.Bot (Token (Token))
+
+data BotCmd = ShowOld | WrongCommand String
 
 -- | Puts message in log
 putLog :: String -- ^ Error message
@@ -62,3 +69,13 @@ untilRight body handler = do
             untilRight body handler
         Right a ->
             pure a
+
+readCommand :: Text -> Maybe BotCmd
+readCommand messageText =
+    case uncons slashCommand of
+        Just ('/', tTail) ->
+            case tTail of
+                "show_old"    -> Just ShowOld
+                wrongCmd -> Just (WrongCommand $ unpack wrongCmd)
+        _ -> Nothing
+  where slashCommand = Text.takeWhile (not . isSpace) messageText
