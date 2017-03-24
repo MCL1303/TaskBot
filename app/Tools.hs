@@ -21,7 +21,7 @@ import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
 import           Data.Text            as Text (Text, strip, takeWhile,
                                                uncons, unpack)
-import qualified Data.Text.IO         as Text (readWhile)
+import qualified Data.Text.IO         as Text (readFile)
 import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
