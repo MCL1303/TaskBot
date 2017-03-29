@@ -35,7 +35,7 @@ putLog :: String -- ^ Error message
 putLog = hPutStrLn stderr
 
 data TokenLoadException = TokenLoadException
-    {tle_cause :: IOException, tle_file :: FilePath}
+    {cause :: IOException, file :: FilePath}
     deriving Show
 instance Exception TokenLoadException
 
@@ -45,7 +45,7 @@ loadToken fileName = do
     pure . Token $ "bot" <> strip rawToken
   where
     handleReadFile e =
-        throwIO TokenLoadException{tle_cause = e, tle_file = fileName}
+        throwIO TokenLoadException{cause = e, file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName =
