@@ -9,6 +9,7 @@ module BotCommands
     ) where
 
 import           Control.Concurrent     (threadDelay)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Char              (isSpace)
 import           Data.Foldable          (for_)
 import           Data.Monoid            ((<>))
@@ -17,47 +18,45 @@ import qualified Data.Text              as Text
 import           Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
                                          getKeyByValue, insertBy, insert_,
                                          selectValList, (==.))
-import           Network.HTTP.Client    (Manager)
-import           Web.Telegram.API.Bot   as Tg (Token (..), sendMessage,
-                                               sendMessageRequest)
+import           Web.Telegram.API.Bot   (sendMessageRequest)
 
-import Const (timeout)
-import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
-import Tools (putLog, untilRight)
+import Classes (MonadDB, MonadLog, MonadTelegram, putLog, runDB, sendMessage)
+import Const   (timeout)
+import DB      (EntityField (NoteId, NoteOwner), Note (..), User (..))
+import Tools   (tshow, untilRight)
 
 data BotCmd = ShowOld | WrongCommand Text
 
-sendMessageB :: Token -> Manager -> Int -> Text -> IO()
-sendMessageB token manager chat_id mesText = do
+sendMessageB :: (MonadIO m, MonadLog m, MonadTelegram m) => Int -> Text -> m ()
+sendMessageB chat_id mesText = do
     _ <- untilRight
-        (sendMessage
-            token
-            (sendMessageRequest (tshow chat_id) mesText)
-            manager)
+        (sendMessage $ sendMessageRequest (tshow chat_id) mesText)
         (\e -> do
-            putLog $ "sendMessageB failed. " <> show e
-            threadDelay timeout)
+            putLog $ "sendMessageB failed. " <> tshow e
+            liftIO $ threadDelay timeout)
     pure ()
 
-showOld :: Token
-        -> Manager
-        -> Int -- ^ ChatId for sending notes
-        -> Int -- ^ UserId - who wants to show
-        -> IO ()
-showOld token manager chatId userId = do
+showOld
+    :: (MonadDB m, MonadLog m, MonadTelegram m)
+    => Int -- ^ ChatId for sending notes
+    -> Int -- ^ UserId - who wants to show
+    -> m ()
+showOld chatId userId = do
     mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
     case mUid of
         Just uid -> do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
-                sendMessageB token manager chatId noteText
+                sendMessageB chatId noteText
         Nothing ->
-            sendMessageB token manager chatId "Записей нет."
+            sendMessageB chatId "Записей нет."
 
-addNote :: Int -- ^ UserId - who wants to insert
-        -> Text -- ^ Inserting note
-        -> IO ()
+addNote
+    :: MonadDB m
+    => Int -- ^ UserId - who wants to insert
+    -> Text -- ^ Inserting note
+    -> m ()
 addNote userId note = do
     uid <-
         runDB $
@@ -74,6 +73,3 @@ readCommand messageText =
                 wrongCmd -> Just (WrongCommand wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
-
-tshow :: Show a => a -> Text
-tshow = Text.pack . show
