@@ -10,24 +10,17 @@ module Tools
     -- * Log tool
     putLog,
     -- * Control flow
-    untilRight,
-    -- * Message recognizing
-    readCommand,
-    BotCmd(..)
+    untilRight
 ) where
 
 import           Control.Exception    (Exception, IOException, catch, throwIO)
-import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
-import           Data.Text            (Text, strip, uncons, unpack)
 import qualified Data.Text            as Text
 import qualified Data.Text.IO         as Text
 import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
 import           Web.Telegram.API.Bot (Token (Token))
-
-data BotCmd = ShowOld | WrongCommand String
 
 -- | Puts message in log
 putLog :: String -- ^ Error message
@@ -42,10 +35,9 @@ instance Exception TokenLoadException
 loadToken :: FilePath -> IO Token
 loadToken fileName = do
     rawToken <- Text.readFile fileName `catch` handleReadFile
-    pure . Token $ "bot" <> strip rawToken
+    pure . Token $ "bot" <> Text.strip rawToken
   where
-    handleReadFile e =
-        throwIO TokenLoadException{cause = e, file = fileName}
+    handleReadFile e = throwIO TokenLoadException{cause = e, file = fileName}
 
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName =
@@ -69,13 +61,3 @@ untilRight body handler = do
             untilRight body handler
         Right a ->
             pure a
-
-readCommand :: Text -> Maybe BotCmd
-readCommand messageText =
-    case uncons slashCommand of
-        Just ('/', tTail) ->
-            case tTail of
-                "show_old"    -> Just ShowOld
-                wrongCmd -> Just (WrongCommand $ unpack wrongCmd)
-        _ -> Nothing
-  where slashCommand = Text.takeWhile (not . isSpace) messageText
