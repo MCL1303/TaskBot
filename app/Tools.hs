@@ -6,9 +6,10 @@ module Tools
     -- * I/O tools
     loadOffset,
     loadToken,
-    saveOffset,
+    saveOffsetM,
     -- * Log tool
     putLog,
+    putLogM,
     -- * Control flow
     untilRight,
     -- * Message recognizing
@@ -17,6 +18,7 @@ module Tools
 ) where
 
 import           Control.Exception    (Exception, IOException, catch, throwIO)
+import           Control.Monad.IO.Class(liftIO)
 import           Data.Char            (isSpace)
 import           Data.Monoid          ((<>))
 import           Data.Text            (Text, strip, uncons, unpack)
@@ -25,14 +27,18 @@ import qualified Data.Text.IO         as Text
 import           Safe                 (readMay)
 import           System.IO            (IOMode (ReadWriteMode), hGetContents,
                                        hPutStrLn, openFile, stderr)
-import           Web.Telegram.API.Bot (Token (Token))
+import           Web.Telegram.API.Bot (TelegramClient, Token (Token))
 
 data BotCmd = ShowOld | WrongCommand String
 
 -- | Puts message in log
 putLog :: String -- ^ Error message
-       -> IO()
+       -> IO ()
 putLog = hPutStrLn stderr
+
+putLogM :: String
+        -> TelegramClient ()
+putLogM = liftIO . putLog
 
 data TokenLoadException = TokenLoadException
     {tle_cause :: IOException, tle_file :: FilePath}
@@ -57,8 +63,9 @@ loadOffset fileName =
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
-saveOffset :: FilePath -> Int -> IO ()
-saveOffset fileName offset = writeFile fileName (show offset)
+saveOffsetM :: FilePath -> Int -> TelegramClient ()
+saveOffsetM fileName offset =
+    liftIO $ writeFile fileName (show offset)
 
 untilRight :: IO (Either e a) -> (e -> IO ()) -> IO a
 untilRight body handler = do
@@ -75,7 +82,7 @@ readCommand messageText =
     case uncons slashCommand of
         Just ('/', tTail) ->
             case tTail of
-                "show_old"    -> Just ShowOld
-                wrongCmd -> Just (WrongCommand $ unpack wrongCmd)
+                "show_old" -> Just ShowOld
+                wrongCmd   -> Just (WrongCommand $ unpack wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
