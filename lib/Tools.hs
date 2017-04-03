@@ -9,6 +9,7 @@ module Tools
     saveOffset,
     -- * Log tool
     putLog,
+    putLogT,
     -- * Control flow
     untilRight,
     -- * Utilities
@@ -16,6 +17,7 @@ module Tools
 ) where
 
 import           Control.Exception (Exception, IOException, catch, throwIO)
+import           Control.Monad.IO.Class (liftIO)
 import           Data.Monoid ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -23,12 +25,16 @@ import qualified Data.Text.IO as Text
 import           System.IO (IOMode (ReadWriteMode), hGetContents, openFile,
                             stderr)
 import           Text.Read (readMaybe)
-import           Web.Telegram.API.Bot (Token (Token))
+import           Web.Telegram.API.Bot (TelegramClient, Token (Token))
 
 -- | Puts message in log
 putLog :: Text -- ^ Error message
-       -> IO()
+       -> IO ()
 putLog = Text.hPutStrLn stderr
+
+putLogT :: Text
+        -> TelegramClient ()
+putLogT = liftIO . putLog
 
 data TokenLoadException = TokenLoadException
     {cause :: IOException, file :: FilePath}
@@ -52,8 +58,9 @@ loadOffset fileName =
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
-saveOffset :: FilePath -> Int -> IO ()
-saveOffset fileName offset = writeFile fileName (show offset)
+saveOffset :: FilePath -> Int -> TelegramClient ()
+saveOffset fileName offset =
+    liftIO $ writeFile fileName (show offset)
 
 untilRight :: IO (Either e a) -> (e -> IO ()) -> IO a
 untilRight body handler = do

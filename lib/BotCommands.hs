@@ -2,62 +2,46 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module BotCommands
-    ( BotCmd(..)
+    ( BotCmd (..)
+    , showNew
     , addNote
     , readCommand
-    , showNew
     ) where
 
-import           Control.Concurrent (threadDelay)
+import           Control.Monad (void)
 import           Data.Char (isSpace)
 import           Data.Foldable (for_)
-import           Data.Monoid ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
                                          getKeyByValue, insertBy, insert_,
                                          selectValList, (==.))
-import           Network.HTTP.Client (Manager)
-import           Web.Telegram.API.Bot (ChatId (..), Token (..), sendMessage,
-                                       sendMessageRequest)
+import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
+                                       sendMessageM, sendMessageRequest)
 
-import Const (timeout)
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
-import Tools (putLog, tshow, untilRight)
 
 data BotCmd = ShowNew | WrongCommand Text
 
-sendMessageB :: Token -> Manager -> Integer -> Text -> IO ()
-sendMessageB token manager chat_id mesText = do
-    _ <- untilRight
-        (sendMessage
-            token
-            (sendMessageRequest (ChatId chat_id) mesText)
-            manager)
-        (\e -> do
-            putLog $ "sendMessageB failed. " <> tshow e
-            threadDelay timeout)
-    pure ()
-
-showNew :: Token
-        -> Manager
-        -> Integer -- ^ ChatId for sending notes
+showNew :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
-        -> IO ()
-showNew token manager chatId userId = do
+        -> TelegramClient ()
+showNew chatId userId = do
     mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
     case mUid of
         Just uid -> do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
-                sendMessageB token manager chatId noteText
+                void . sendMessageM $
+                    sendMessageRequest (ChatId chatId) noteText
         Nothing ->
-            sendMessageB token manager chatId "Записей нет."
+            void . sendMessageM $
+                sendMessageRequest (ChatId chatId) "Записей нет."
 
 addNote :: Int -- ^ UserId - who wants to insert
-        -> Text -- ^ Inserting note
-        -> IO ()
+        -> Text -- ^ Note to insert
+        -> TelegramClient ()
 addNote userId note = do
     uid <-
         runDB $
