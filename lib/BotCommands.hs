@@ -5,7 +5,7 @@ module BotCommands
     ( BotCmd(..)
     , addNote
     , readCommand
-    , showOld
+    , showNew
     ) where
 
 import           Control.Concurrent     (threadDelay)
@@ -25,7 +25,7 @@ import Const (timeout)
 import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 import Tools (putLog, untilRight)
 
-data BotCmd = ShowOld | WrongCommand Text
+data BotCmd = ShowNew | WrongCommand Text
 
 sendMessageB :: Token -> Manager -> Int -> Text -> IO()
 sendMessageB token manager chat_id mesText = do
@@ -70,8 +70,8 @@ readCommand messageText =
     case Text.uncons slashCommand of
         Just ('/', tTail) ->
             case tTail of
-                "show_old"    -> Just ShowOld
-                wrongCmd -> Just (WrongCommand wrongCmd)
+                "show_new" -> Just ShowNew
+                wrongCmd   -> Just (WrongCommand wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
 
