@@ -49,7 +49,7 @@ showOld token manager chatId userId = do
     case mUid of
         Just uid -> do
             notes <- runDB $
-                selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
+                selectValList [NoteOwner ==. uid] [LimitTo 3]
             for_ notes $ \Note{noteText} ->
                 sendMessageB token manager chatId noteText
         Nothing ->
