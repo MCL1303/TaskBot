@@ -39,12 +39,12 @@ sendMessageB token manager chat_id mesText = do
             threadDelay timeout)
     pure ()
 
-showOld :: Token
+showNew :: Token
         -> Manager
         -> Int -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
         -> IO ()
-showOld token manager chatId userId = do
+showNew token manager chatId userId = do
     mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
     case mUid of
         Just uid -> do
