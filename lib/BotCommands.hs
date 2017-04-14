@@ -14,7 +14,7 @@ import           Data.Foldable          (for_)
 import           Data.Monoid            ((<>))
 import           Data.Text              (Text)
 import qualified Data.Text              as Text
-import           Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
+import           Database.Persist.Extra (Entity (..), SelectOpt (LimitTo),
                                          getKeyByValue, insertBy, insert_,
                                          selectValList, (==.))
 import           Network.HTTP.Client    (Manager)
@@ -22,7 +22,7 @@ import           Web.Telegram.API.Bot   as Tg (Token (..), sendMessage,
                                                sendMessageRequest)
 
 import Const (timeout)
-import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
+import DB    (EntityField (NoteOwner), Note (..), User (..), runDB)
 import Tools (putLog, untilRight)
 
 data BotCmd = ShowOld | WrongCommand Text
@@ -70,7 +70,7 @@ readCommand messageText =
     case Text.uncons slashCommand of
         Just ('/', tTail) ->
             case tTail of
-                "show_old"    -> Just ShowOld
+                "show_old" -> Just ShowOld
                 wrongCmd -> Just (WrongCommand wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText

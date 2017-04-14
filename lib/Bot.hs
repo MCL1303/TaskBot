@@ -9,7 +9,6 @@ module Bot
 import           Control.Concurrent   (threadDelay)
 import           Data.Foldable        (for_)
 import           Data.Monoid          ((<>))
-import qualified Data.Text            as Text
 import           Network.HTTP.Client  (Manager)
 import           Safe                 (lastMay)
 import           Web.Telegram.API.Bot as Tg (Chat (..), Message (..),
@@ -55,7 +54,7 @@ handleMessage token manager update =
         _ ->
             putLog $ "unhandled " <> show update
   where
-    cmdErr c = "Wrong bot command: " <> Text.unpack c
+    cmdErr c = "Wrong bot command: " <> show c
     Update{update_id, message = mMessage} = update
 
 handleUpdates :: Token -> Manager -> [Update] -> IO (Maybe Int)
