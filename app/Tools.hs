@@ -6,10 +6,10 @@ module Tools
     -- * I/O tools
     loadOffset,
     loadToken,
-    saveOffsetM,
+    saveOffset,
     -- * Log tool
     putLog,
-    putLogM,
+    putLogTM,
     -- * Control flow
     untilRight,
     -- * Message recognizing
@@ -36,9 +36,9 @@ putLog :: String -- ^ Error message
        -> IO ()
 putLog = hPutStrLn stderr
 
-putLogM :: String
+putLogTM :: String
         -> TelegramClient ()
-putLogM = liftIO . putLog
+putLogTM = liftIO . putLog
 
 data TokenLoadException = TokenLoadException
     {tle_cause :: IOException, tle_file :: FilePath}
@@ -63,8 +63,8 @@ loadOffset fileName =
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
 
-saveOffsetM :: FilePath -> Int -> TelegramClient ()
-saveOffsetM fileName offset =
+saveOffset :: FilePath -> Int -> TelegramClient ()
+saveOffset fileName offset =
     liftIO $ writeFile fileName (show offset)
 
 untilRight :: IO (Either e a) -> (e -> IO ()) -> IO a

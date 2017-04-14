@@ -13,8 +13,8 @@ import Web.Telegram.API.Bot    as Tg (Chat (..), GetUpdatesRequest (..),
                                       runClient)
 
 import BotCommands (addNote, showOld)
-import Tools       (BotCmd (..), loadOffset, loadToken, putLog, putLogM, readCommand,
-                    saveOffsetM)
+import Tools       (BotCmd (..), loadOffset, loadToken, putLog, putLogTM, readCommand,
+                    saveOffset)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
@@ -32,13 +32,13 @@ handleMessage update =
                         ShowOld ->
                             showOld chat_id user_id
                         WrongCommand wrongCmd ->
-                            putLogM (cmdErr wrongCmd)
+                            putLogTM (cmdErr wrongCmd)
                 Nothing -> addNote user_id text
-            saveOffsetM updateIdFile update_id
+            saveOffset updateIdFile update_id
         Just msg ->
-            putLogM $ "unhandled " <> show msg
+            putLogTM $ "unhandled " <> show msg
         _ ->
-            putLogM $ "unhandled " <> show update
+            putLogTM $ "unhandled " <> show update
   where
     cmdErr c = "Wrong bot command: " <> c
     Update{update_id, message = mMessage} = update
@@ -46,7 +46,7 @@ handleMessage update =
 bot :: Maybe Int -- ^ Offset (update id)
     -> TelegramClient ()
 bot curOffset = do
-    uResult <- getUpdatesM uRequest
+    uResult <- getUpdatesM updatesRequest
     let Response{result} = uResult
     case lastMay result of
         Just Update{update_id} -> do
@@ -55,16 +55,13 @@ bot curOffset = do
             bot $ Just newOffset
         Nothing -> bot curOffset
   where
-    uRequest = GetUpdatesRequest curOffset Nothing Nothing Nothing
+    updatesRequest = GetUpdatesRequest curOffset Nothing Nothing Nothing
 
 main :: IO ()
 main = do
     offset   <- loadOffset updateIdFile
     token    <- loadToken tokenFile
     manager  <- newManager tlsManagerSettings
-    res <- runClient
-        (bot offset)
-        token
-        manager
+    res <- runClient (bot offset) token manager
     putLog $ show res
   where tokenFile = "token.txt"

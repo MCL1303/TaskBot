@@ -35,10 +35,10 @@ share
 dbfile :: Text
 dbfile = "./db.sqlite"
 
-runDBM
+runDB
     :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -- ^ database action
     -> TelegramClient a
-runDBM action =
+runDB action =
     liftIO . runSqlite dbfile $ do
         runMigration migrateAll
         action

@@ -15,21 +15,23 @@ import Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
 import Web.Telegram.API.Bot   as Tg (ChatId(..), TelegramClient, sendMessageM,
                                      sendMessageRequest)
 
-import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDBM)
+import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
 sendMessageB :: Int -> Text -> TelegramClient ()
 sendMessageB chatId mesText = do
-    _ <- sendMessageM (sendMessageRequest (ChatId $ fromIntegral chatId) mesText)
+    _ <- sendMessageM messageRequest
     pure ()
+  where
+    messageRequest = sendMessageRequest (ChatId $ fromIntegral chatId) mesText
 
 showOld :: Int -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
         -> TelegramClient ()
 showOld chatId userId = do
-    mUid <- runDBM $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
+    mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
     case mUid of
         Just uid -> do
-            notes <- runDBM $
+            notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
                 sendMessageB chatId noteText
@@ -41,7 +43,7 @@ addNote :: Int -- ^ UserId - who wants to insert
         -> TelegramClient ()
 addNote userId note = do
     uid <-
-        runDBM $
+        runDB $
             either entityKey id <$>
             insertBy DB.User{userTelegramId = fromIntegral userId}
-    runDBM $ insert_ Note{noteText = note, noteOwner = uid}
+    runDB $ insert_ Note{noteText = note, noteOwner = uid}
