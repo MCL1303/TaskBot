@@ -69,7 +69,7 @@ readCommand :: Text -> Maybe BotCmd
 readCommand messageText =
     case Text.uncons slashCommand of
         Just ('/', tTail) ->
-            case tTail of
+            case Text.strip tTail of
                 "show_new" -> Just ShowNew
                 wrongCmd   -> Just (WrongCommand wrongCmd)
         _ -> Nothing
