@@ -7,19 +7,20 @@ module BotCommands
 )
 where
 
+import Control.Monad          (void)
 import Data.Foldable          (for_)
 import Data.Text              (Text, pack)
 import Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
                                getKeyByValue, insertBy, insert_, selectValList,
                                (==.))
-import Web.Telegram.API.Bot   as Tg (ChatId(..), TelegramClient, sendMessageM,
+import Web.Telegram.API.Bot   as Tg (ChatId (..), TelegramClient, sendMessageM,
                                      sendMessageRequest)
 
-import DB    (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
+import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
 sendMessageB :: Int -> Text -> TelegramClient ()
 sendMessageB chatId mesText = do
-    _ <- sendMessageM messageRequest
+    void $ sendMessageM messageRequest
     pure ()
   where
     messageRequest = sendMessageRequest (ChatId $ fromIntegral chatId) mesText

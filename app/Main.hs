@@ -8,13 +8,13 @@ import Network.HTTP.Client     (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Safe                    (lastMay)
 import Web.Telegram.API.Bot    as Tg (Chat (..), GetUpdatesRequest (..),
-                                      Message (..), Response (..), TelegramClient,
-                                      Update (..), User (..), getUpdatesM,
-                                      runClient)
+                                      Message (..), Response (..),
+                                      TelegramClient, Update (..), User (..),
+                                      getUpdatesM, getUpdatesRequest, runClient)
 
 import BotCommands (addNote, showOld)
-import Tools       (BotCmd (..), loadOffset, loadToken, putLog, putLogTM, readCommand,
-                    saveOffset)
+import Tools       (BotCmd (..), loadOffset, loadToken, putLog, putLogT,
+                    readCommand, saveOffset)
 
 -- | Path to file which contains current update id
 updateIdFile :: String
@@ -32,13 +32,13 @@ handleMessage update =
                         ShowOld ->
                             showOld chat_id user_id
                         WrongCommand wrongCmd ->
-                            putLogTM (cmdErr wrongCmd)
+                            putLogT (cmdErr wrongCmd)
                 Nothing -> addNote user_id text
             saveOffset updateIdFile update_id
         Just msg ->
-            putLogTM $ "unhandled " <> show msg
+            putLogT $ "unhandled " <> show msg
         _ ->
-            putLogTM $ "unhandled " <> show update
+            putLogT $ "unhandled " <> show update
   where
     cmdErr c = "Wrong bot command: " <> c
     Update{update_id, message = mMessage} = update
@@ -46,8 +46,7 @@ handleMessage update =
 bot :: Maybe Int -- ^ Offset (update id)
     -> TelegramClient ()
 bot curOffset = do
-    uResult <- getUpdatesM updatesRequest
-    let Response{result} = uResult
+    Response{result} <- getUpdatesM updatesRequest
     case lastMay result of
         Just Update{update_id} -> do
             let newOffset = update_id + 1
@@ -55,8 +54,7 @@ bot curOffset = do
             bot $ Just newOffset
         Nothing -> bot curOffset
   where
-    updatesRequest = GetUpdatesRequest curOffset Nothing Nothing Nothing
-
+    updatesRequest = getUpdatesRequest{updates_offset = curOffset}
 main :: IO ()
 main = do
     offset   <- loadOffset updateIdFile

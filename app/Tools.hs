@@ -9,7 +9,7 @@ module Tools
     saveOffset,
     -- * Log tool
     putLog,
-    putLogTM,
+    putLogT,
     -- * Control flow
     untilRight,
     -- * Message recognizing
@@ -17,17 +17,17 @@ module Tools
     BotCmd(..)
 ) where
 
-import           Control.Exception    (Exception, IOException, catch, throwIO)
-import           Control.Monad.IO.Class(liftIO)
-import           Data.Char            (isSpace)
-import           Data.Monoid          ((<>))
-import           Data.Text            (Text, strip, uncons, unpack)
-import qualified Data.Text            as Text
-import qualified Data.Text.IO         as Text
-import           Safe                 (readMay)
-import           System.IO            (IOMode (ReadWriteMode), hGetContents,
-                                       hPutStrLn, openFile, stderr)
-import           Web.Telegram.API.Bot (TelegramClient, Token (Token))
+import           Control.Exception      (Exception, IOException, catch, throwIO)
+import           Control.Monad.IO.Class (liftIO)
+import           Data.Char              (isSpace)
+import           Data.Monoid            ((<>))
+import           Data.Text              (Text, strip, uncons, unpack)
+import qualified Data.Text              as Text
+import qualified Data.Text.IO           as Text
+import           Safe                   (readMay)
+import           System.IO              (IOMode (ReadWriteMode), hGetContents,
+                                         hPutStrLn, openFile, stderr)
+import           Web.Telegram.API.Bot   (TelegramClient, Token (Token))
 
 data BotCmd = ShowOld | WrongCommand String
 
@@ -36,9 +36,9 @@ putLog :: String -- ^ Error message
        -> IO ()
 putLog = hPutStrLn stderr
 
-putLogTM :: String
+putLogT :: String
         -> TelegramClient ()
-putLogTM = liftIO . putLog
+putLogT = liftIO . putLog
 
 data TokenLoadException = TokenLoadException
     {tle_cause :: IOException, tle_file :: FilePath}
