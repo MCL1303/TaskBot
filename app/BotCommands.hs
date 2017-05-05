@@ -18,14 +18,13 @@ import Web.Telegram.API.Bot   as Tg (ChatId (..), TelegramClient, sendMessageM,
 
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
-sendMessageB :: Int -> Text -> TelegramClient ()
+sendMessageB :: Integer -> Text -> TelegramClient ()
 sendMessageB chatId mesText = do
     void $ sendMessageM messageRequest
-    pure ()
   where
-    messageRequest = sendMessageRequest (ChatId $ fromIntegral chatId) mesText
+    messageRequest = sendMessageRequest (ChatId chatId) mesText
 
-showOld :: Int -- ^ ChatId for sending notes
+showOld :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
         -> TelegramClient ()
 showOld chatId userId = do
@@ -40,7 +39,7 @@ showOld chatId userId = do
             sendMessageB chatId (pack "Записей нет.")
 
 addNote :: Int -- ^ UserId - who wants to insert
-        -> Text -- ^ Inserting note
+        -> Text -- ^ Note to insert
         -> TelegramClient ()
 addNote userId note = do
     uid <-

@@ -30,7 +30,7 @@ handleMessage update =
                 Just command ->
                     case command of
                         ShowOld ->
-                            showOld chat_id user_id
+                            showOld (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
                             putLogT (cmdErr wrongCmd)
                 Nothing -> addNote user_id text
@@ -57,9 +57,9 @@ bot curOffset = do
     updatesRequest = getUpdatesRequest{updates_offset = curOffset}
 main :: IO ()
 main = do
-    offset   <- loadOffset updateIdFile
-    token    <- loadToken tokenFile
-    manager  <- newManager tlsManagerSettings
-    res <- runClient (bot offset) token manager
+    offset  <- loadOffset updateIdFile
+    token   <- loadToken tokenFile
+    manager <- newManager tlsManagerSettings
+    res     <- runClient (bot offset) token manager
     putLog $ show res
   where tokenFile = "token.txt"
