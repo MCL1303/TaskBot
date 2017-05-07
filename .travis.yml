@@ -34,6 +34,6 @@ matrix:
         - $stack test --pedantic --haddock --no-haddock-deps
     - compiler: hlint
       install:
-        - stack build hlint
+        - $stack build hlint
       script:
-        - stack exec -- hlint .
+        - $stack exec -- hlint .
