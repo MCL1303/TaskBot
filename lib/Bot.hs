@@ -15,7 +15,7 @@ import           Web.Telegram.API.Bot as Tg (Chat (..), Message (..),
                                              Response (..), Token, Update (..),
                                              User (..), getUpdates)
 
-import BotCommands (BotCmd (..), addNote, readCommand, showNew)
+import BotCommands (BotCmd (..), addNote, readCommand, showNew, showOld)
 import Const       (timeout, updateIdFile)
 import Tools       (putLog, saveOffset)
 
@@ -45,6 +45,8 @@ handleMessage token manager update =
                     case command of
                         ShowNew ->
                             showNew token manager chat_id user_id
+                        ShowOld ->
+                            showOld token manager chat_id user_id
                         WrongCommand wrongCmd ->
                             putLog (cmdErr wrongCmd)
                 Nothing -> addNote user_id text
