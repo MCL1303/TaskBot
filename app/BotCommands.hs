@@ -1,4 +1,5 @@
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module BotCommands
 (
@@ -9,7 +10,7 @@ where
 
 import Control.Monad          (void)
 import Data.Foldable          (for_)
-import Data.Text              (Text, pack)
+import Data.Text              (Text)
 import Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
                                getKeyByValue, insertBy, insert_, selectValList,
                                (==.))
@@ -32,7 +33,7 @@ showOld chatId userId = do
                     sendMessageRequest (ChatId chatId) noteText
         Nothing ->
             void . sendMessageM $
-                sendMessageRequest (ChatId chatId) (pack "Записей нет.")
+                sendMessageRequest (ChatId chatId) "Записей нет."
 
 addNote :: Int -- ^ UserId - who wants to insert
         -> Text -- ^ Note to insert
