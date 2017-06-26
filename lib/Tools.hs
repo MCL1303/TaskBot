@@ -10,22 +10,25 @@ module Tools
     -- * Log tool
     putLog,
     -- * Control flow
-    untilRight
+    untilRight,
+    -- * Utilities
+    tshow
 ) where
 
 import           Control.Exception (Exception, IOException, catch, throwIO)
 import           Data.Monoid ((<>))
+import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import           Safe (readMay)
-import           System.IO (IOMode (ReadWriteMode), hGetContents, hPutStrLn,
-                            openFile, stderr)
+import           System.IO (IOMode (ReadWriteMode), hGetContents, openFile,
+                            stderr)
 import           Web.Telegram.API.Bot (Token (Token))
 
 -- | Puts message in log
-putLog :: String -- ^ Error message
+putLog :: Text -- ^ Error message
        -> IO()
-putLog = hPutStrLn stderr
+putLog = Text.hPutStrLn stderr
 
 data TokenLoadException = TokenLoadException
     {cause :: IOException, file :: FilePath}
@@ -44,7 +47,7 @@ loadOffset fileName =
     do  offsetString <- readWritableFile
         pure $ readMay offsetString
     `catch` \(e :: IOException) -> do
-        putLog $ show e
+        putLog $ tshow e
         pure Nothing
   where
     readWritableFile = openFile fileName ReadWriteMode >>= hGetContents
@@ -61,3 +64,6 @@ untilRight body handler = do
             untilRight body handler
         Right a ->
             pure a
+
+tshow :: Show a => a -> Text
+tshow = Text.pack . show

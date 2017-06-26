@@ -23,7 +23,7 @@ import           Web.Telegram.API.Bot (ChatId (..), Token (..), sendMessage,
 
 import Const (timeout)
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
-import Tools (putLog, untilRight)
+import Tools (putLog, tshow, untilRight)
 
 data BotCmd = ShowNew | WrongCommand Text
 
@@ -35,7 +35,7 @@ sendMessageB token manager chat_id mesText = do
             (sendMessageRequest (ChatId chat_id) mesText)
             manager)
         (\e -> do
-            putLog $ "sendMessageB failed. " <> show e
+            putLog $ "sendMessageB failed. " <> tshow e
             threadDelay timeout)
     pure ()
 
