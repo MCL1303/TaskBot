@@ -18,7 +18,7 @@ import           Database.Persist.Extra (Entity (..), SelectOpt (Desc, LimitTo),
                                          getKeyByValue, insertBy, insert_,
                                          selectValList, (==.))
 import           Network.HTTP.Client (Manager)
-import           Web.Telegram.API.Bot (Token (..), sendMessage,
+import           Web.Telegram.API.Bot (ChatId (..), Token (..), sendMessage,
                                        sendMessageRequest)
 
 import Const (timeout)
@@ -27,12 +27,12 @@ import Tools (putLog, untilRight)
 
 data BotCmd = ShowNew | WrongCommand Text
 
-sendMessageB :: Token -> Manager -> Int -> Text -> IO()
+sendMessageB :: Token -> Manager -> Integer -> Text -> IO ()
 sendMessageB token manager chat_id mesText = do
     _ <- untilRight
         (sendMessage
             token
-            (sendMessageRequest (tshow chat_id) mesText)
+            (sendMessageRequest (ChatId chat_id) mesText)
             manager)
         (\e -> do
             putLog $ "sendMessageB failed. " <> show e
@@ -41,7 +41,7 @@ sendMessageB token manager chat_id mesText = do
 
 showNew :: Token
         -> Manager
-        -> Int -- ^ ChatId for sending notes
+        -> Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
         -> IO ()
 showNew token manager chatId userId = do
@@ -74,6 +74,3 @@ readCommand messageText =
                 wrongCmd   -> Just (WrongCommand wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
-
-tshow :: Show a => a -> Text
-tshow = Text.pack . show

@@ -43,7 +43,7 @@ handleMessage token manager update =
                 Just command ->
                     case command of
                         ShowNew ->
-                            showNew token manager chat_id user_id
+                            showNew token manager (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
                             putLog (cmdErr wrongCmd)
                 Nothing -> addNote user_id text
