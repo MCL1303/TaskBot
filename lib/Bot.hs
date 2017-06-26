@@ -14,7 +14,7 @@ import Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..), Message (..),
 
 import BotCommands (BotCmd (..), addNote, readCommand, showNew)
 import Const (updateIdFile)
-import Tools (putLogT, saveOffset, tshow)
+import Tools (putLog, saveOffset, tshow)
 
 bot :: Maybe Int -- ^ Offset (update id)
     -> TelegramClient ()
@@ -41,13 +41,13 @@ handleMessage update =
                         ShowNew ->
                             showNew (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
-                            putLogT $ cmdErr wrongCmd
+                            putLog $ cmdErr wrongCmd
                 Nothing -> addNote user_id text
             saveOffset updateIdFile update_id
         Just msg ->
-            putLogT $ "unhandled " <> tshow msg
+            putLog $ "unhandled " <> tshow msg
         _ ->
-            putLogT $ "unhandled " <> tshow update
+            putLog $ "unhandled " <> tshow update
   where
     cmdErr c = "Wrong bot command: " <> tshow c
     Update{update_id, message = mMessage} = update
