@@ -20,9 +20,9 @@ import           Data.Monoid ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
-import           Safe (readMay)
 import           System.IO (IOMode (ReadWriteMode), hGetContents, openFile,
                             stderr)
+import           Text.Read (readMaybe)
 import           Web.Telegram.API.Bot (Token (Token))
 
 -- | Puts message in log
@@ -45,7 +45,7 @@ loadToken fileName = do
 loadOffset :: FilePath -> IO (Maybe Int)
 loadOffset fileName =
     do  offsetString <- readWritableFile
-        pure $ readMay offsetString
+        pure $ readMaybe offsetString
     `catch` \(e :: IOException) -> do
         putLog $ tshow e
         pure Nothing
