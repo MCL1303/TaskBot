@@ -2,10 +2,10 @@
 
 module Main (main) where
 
-import Network.HTTP.Client     (newManager)
+import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 
-import Bot   (bot)
+import Bot (bot)
 import Const (tokenFile, updateIdFile)
 import Tools (loadOffset, loadToken)
 

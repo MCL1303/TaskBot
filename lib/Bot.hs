@@ -6,18 +6,17 @@ module Bot
     , handleUpdates
     ) where
 
-import           Control.Concurrent   (threadDelay)
-import           Data.Foldable        (for_)
-import           Data.Monoid          ((<>))
-import           Network.HTTP.Client  (Manager)
-import           Safe                 (lastMay)
-import           Web.Telegram.API.Bot as Tg (Chat (..), Message (..),
-                                             Response (..), Token, Update (..),
-                                             User (..), getUpdates)
+import Control.Concurrent (threadDelay)
+import Data.Foldable (for_)
+import Data.Monoid ((<>))
+import Network.HTTP.Client (Manager)
+import Safe (lastMay)
+import Web.Telegram.API.Bot (Chat (..), Message (..), Response (..), Token,
+                             Update (..), User (..), getUpdates)
 
 import BotCommands (BotCmd (..), addNote, readCommand, showNew)
-import Const       (timeout, updateIdFile)
-import Tools       (putLog, saveOffset)
+import Const (timeout, updateIdFile)
+import Tools (putLog, saveOffset)
 
 bot :: Token
     -> Maybe Int -- ^ Offset (update id)

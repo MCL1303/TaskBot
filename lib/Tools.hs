@@ -13,13 +13,13 @@ module Tools
     untilRight
 ) where
 
-import           Control.Exception    (Exception, IOException, catch, throwIO)
-import           Data.Monoid          ((<>))
-import qualified Data.Text            as Text
-import qualified Data.Text.IO         as Text
-import           Safe                 (readMay)
-import           System.IO            (IOMode (ReadWriteMode), hGetContents,
-                                       hPutStrLn, openFile, stderr)
+import           Control.Exception (Exception, IOException, catch, throwIO)
+import           Data.Monoid ((<>))
+import qualified Data.Text as Text
+import qualified Data.Text.IO as Text
+import           Safe (readMay)
+import           System.IO (IOMode (ReadWriteMode), hGetContents, hPutStrLn,
+                            openFile, stderr)
 import           Web.Telegram.API.Bot (Token (Token))
 
 -- | Puts message in log

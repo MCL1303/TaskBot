@@ -9,7 +9,7 @@ module Database.Persist.Extra
 import Database.Persist as Persist
 
 import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Reader   (ReaderT)
+import Control.Monad.Reader (ReaderT)
 
 getKeyByValue
     ::  ( MonadIO m
