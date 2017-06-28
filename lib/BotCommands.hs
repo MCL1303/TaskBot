@@ -3,9 +3,10 @@
 
 module BotCommands
     ( BotCmd (..)
-    , showNew
     , addNote
     , readCommand
+    , showNew
+    , showOld
     ) where
 
 import           Control.Monad (void)
@@ -21,7 +22,7 @@ import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
 
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
-data BotCmd = ShowNew | WrongCommand Text
+data BotCmd = ShowNew | ShowOld | WrongCommand Text
 
 showNew :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
@@ -32,6 +33,22 @@ showNew chatId userId = do
         Just uid -> do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
+            for_ notes $ \Note{noteText} ->
+                void . sendMessageM $
+                    sendMessageRequest (ChatId chatId) noteText
+        Nothing ->
+            void . sendMessageM $
+                sendMessageRequest (ChatId chatId) "Записей нет."
+
+showOld :: Integer -- ^ ChatId for sending notes
+        -> Int -- ^ UserId - who wants to show
+        -> TelegramClient ()
+showOld chatId userId = do
+    mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
+    case mUid of
+        Just uid -> do
+            notes <- runDB $
+                selectValList [NoteOwner ==. uid] [LimitTo 3]
             for_ notes $ \Note{noteText} ->
                 void . sendMessageM $
                     sendMessageRequest (ChatId chatId) noteText
@@ -55,6 +72,7 @@ readCommand messageText =
         Just ('/', tTail) ->
             case Text.strip tTail of
                 "show_new" -> Just ShowNew
+                "show_old" -> Just ShowOld
                 wrongCmd   -> Just (WrongCommand wrongCmd)
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
