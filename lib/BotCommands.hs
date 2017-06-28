@@ -26,7 +26,7 @@ data BotCmd = ShowNew | ShowOld | WrongCommand Text
 
 sendMessage :: Integer
             -> Text
-            -> TelegramClient()
+            -> TelegramClient ()
 sendMessage chatId message = void . sendMessageM $
     sendMessageRequest (ChatId chatId) message
 
