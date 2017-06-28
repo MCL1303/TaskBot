@@ -12,7 +12,8 @@ import Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..), Message (..),
                              Response (..), TelegramClient, Update (..),
                              User (..), getUpdatesM, getUpdatesRequest)
 
-import BotCommands (BotCmd (..), addNote, readCommand, showNew, showOld)
+import BotCommands (BotCmd (..), addNote, readCommand, sendMessage, showNew,
+                    showOld)
 import Const (updateIdFile)
 import Tools (putLog, saveOffset, tshow)
 
@@ -42,8 +43,11 @@ handleMessage update =
                             showNew (fromIntegral chat_id) user_id
                         ShowOld ->
                             showOld (fromIntegral chat_id) user_id
-                        WrongCommand wrongCmd ->
+                        WrongCommand wrongCmd -> do
                             putLog $ cmdErr wrongCmd
+                            sendMessage
+                                (fromIntegral chat_id)
+                                "Неправильная команда. /help"
                 Nothing -> addNote user_id text
             saveOffset updateIdFile update_id
         Just msg ->
