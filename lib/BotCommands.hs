@@ -3,14 +3,10 @@
 
 module BotCommands
     ( BotCmd (..)
-    , showNew
     , addNote
     , readCommand
-<<<<<<< HEAD
-=======
     , showNew
     , showOld
->>>>>>> show old
     ) where
 
 import           Control.Monad (void)
