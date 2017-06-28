@@ -41,6 +41,10 @@ handleMessage update =
                         ShowNew ->
                             showNew (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
+                            sendMessageM $
+                                sendMessageRequest
+                                    (ChatId chatId)
+                                    "Неправильная команда. /help"
                             putLog $ cmdErr wrongCmd
                 Nothing -> addNote user_id text
             saveOffset updateIdFile update_id
