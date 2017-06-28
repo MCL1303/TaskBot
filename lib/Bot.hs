@@ -12,7 +12,8 @@ import Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..), Message (..),
                              Response (..), TelegramClient, Update (..),
                              User (..), getUpdatesM, getUpdatesRequest)
 
-import BotCommands (BotCmd (..), addNote, readCommand, showNew, showOld)
+import BotCommands (BotCmd (..), addNote, countNotes, readCommand, sendMessage,
+                    showNew, showOld)
 import Const (updateIdFile)
 import Tools (putLog, saveOffset, tshow)
 
@@ -44,7 +45,13 @@ handleMessage update =
                             showOld (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
                             putLog $ cmdErr wrongCmd
-                Nothing -> addNote user_id text
+                Nothing -> do
+                    addNote user_id text
+                    notes <- countNotes user_id
+                    sendMessage
+                        (fromIntegral chat_id)
+                        ("Добавлено. Всего " <> (tshow notes) <>
+                            " заметок.")
             saveOffset updateIdFile update_id
         Just msg ->
             putLog $ "unhandled " <> tshow msg

@@ -4,7 +4,9 @@
 module BotCommands
     ( BotCmd (..)
     , addNote
+    , countNotes
     , readCommand
+    , sendMessage
     , showNew
     , showOld
     ) where
@@ -23,6 +25,16 @@ import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
 data BotCmd = ShowNew | ShowOld | WrongCommand Text
+
+countNotes :: Int
+           -> TelegramClient (Int)
+countNotes userId = do
+    mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
+    case mUid of
+        Just uid -> do
+            notes <- runDB $ selectValList [NoteOwner ==. uid] []
+            pure $ length notes
+        Nothing -> pure 0
 
 sendMessage :: Integer
             -> Text
