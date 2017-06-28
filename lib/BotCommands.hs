@@ -40,21 +40,21 @@ showNew chatId userId = do
             void . sendMessageM $
                 sendMessageRequest (ChatId chatId) "Записей нет."
 
-showOld :: Token
-        -> Manager
-        -> Int -- ^ ChatId for sending notes
+showOld :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
-        -> IO ()
-showOld token manager chatId userId = do
+        -> TelegramClient ()
+showOld chatId userId = do
     mUid <- runDB $ getKeyByValue DB.User{userTelegramId = fromIntegral userId}
     case mUid of
         Just uid -> do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3]
             for_ notes $ \Note{noteText} ->
-                sendMessageB token manager chatId noteText
+                void . sendMessageM $
+                    sendMessageRequest (ChatId chatId) noteText
         Nothing ->
-            sendMessageB token manager chatId "Записей нет."
+            void . sendMessageM $
+                sendMessageRequest (ChatId chatId) "Записей нет."
 
 addNote :: Int -- ^ UserId - who wants to insert
         -> Text -- ^ Note to insert
