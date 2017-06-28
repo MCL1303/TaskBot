@@ -24,6 +24,12 @@ import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
 data BotCmd = ShowNew | ShowOld | WrongCommand Text
 
+sendMessage :: Integer
+            -> Text
+            -> TelegramClient()
+sendMessage chatId message = void . sendMessageM $
+    sendMessageRequest (ChatId chatId) message
+
 showNew :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
         -> TelegramClient ()
@@ -34,11 +40,9 @@ showNew chatId userId = do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3, Desc NoteId]
             for_ notes $ \Note{noteText} ->
-                void . sendMessageM $
-                    sendMessageRequest (ChatId chatId) noteText
+                sendMessage chatId noteText
         Nothing ->
-            void . sendMessageM $
-                sendMessageRequest (ChatId chatId) "Записей нет."
+            sendMessage chatId "Записей нет."
 
 showOld :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
@@ -50,11 +54,9 @@ showOld chatId userId = do
             notes <- runDB $
                 selectValList [NoteOwner ==. uid] [LimitTo 3]
             for_ notes $ \Note{noteText} ->
-                void . sendMessageM $
-                    sendMessageRequest (ChatId chatId) noteText
+                sendMessage chatId noteText
         Nothing ->
-            void . sendMessageM $
-                sendMessageRequest (ChatId chatId) "Записей нет."
+            sendMessage chatId "Записей нет."
 
 addNote :: Int -- ^ UserId - who wants to insert
         -> Text -- ^ Note to insert
