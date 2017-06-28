@@ -26,7 +26,7 @@ import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
 
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
-data BotCmd = ShowNew | ShowOld| WrongCommand Text
+data BotCmd = ShowNew | ShowOld | WrongCommand Text
 
 showNew :: Integer -- ^ ChatId for sending notes
         -> Int -- ^ UserId - who wants to show
