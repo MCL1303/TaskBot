@@ -39,12 +39,10 @@ handleMessage update =
             let User{user_id, user_first_name, user_last_name, user_username} =
                     from
             let userText = Text.unwords
-                    [ "User{"
-                    , tshow user_id
-                    , user_first_name
+                    [ "User{" <> tshow user_id
+                    , tshow user_first_name
                     , tshow $ fromMaybe "" user_last_name
-                    , tshow $ fromMaybe "" user_username
-                    , "}"
+                    , tshow (maybe "" ("@" <>) user_username) <> "}"
                     ]
             let Chat{chat_id} = chat
             case readCommand text of
@@ -55,8 +53,8 @@ handleMessage update =
                             showNew (fromIntegral chat_id) user_id
                         ShowOld ->
                             showOld (fromIntegral chat_id) user_id
-                        WrongCommand wrongCmd ->
-                            putLog $ cmdErr wrongCmd
+                        WrongCommand{} ->
+                            pure ()
                 Nothing -> do
                     putLog $ userText <> " adds note"
                     addNote user_id text
@@ -66,5 +64,4 @@ handleMessage update =
         _ ->
             putLog $ "unhandled " <> tshow update
   where
-    cmdErr c = "Wrong bot command: " <> tshow c
     Update{update_id, message = mMessage} = update
