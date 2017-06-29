@@ -60,15 +60,17 @@ showOld chatId userId = do
         Nothing ->
             sendMessage chatId "Записей нет."
 
-addNote :: Int -- ^ UserId - who wants to insert
+addNote :: Integer
+        -> Int -- ^ UserId - who wants to insert
         -> Text -- ^ Note to insert
         -> TelegramClient ()
-addNote userId note = do
+addNote chatId userId note = do
     uid <-
         runDB $
             either entityKey id <$>
             insertBy DB.User{userTelegramId = fromIntegral userId}
     runDB $ insert_ Note{noteText = note, noteOwner = uid}
+    sendMessage chatId "Запомнил."
 
 readCommand :: Text -> Maybe BotCmd
 readCommand messageText =

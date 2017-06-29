@@ -61,7 +61,7 @@ handleMessage update =
                             pure ()
                 Nothing -> do
                     putLog $ userText <> " adds note"
-                    addNote user_id text
+                    addNote (fromIntegral chat_id) user_id text
             saveOffset updateIdFile update_id
         Just msg ->
             putLog $ "unhandled " <> tshow msg
