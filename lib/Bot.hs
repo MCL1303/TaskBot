@@ -15,7 +15,8 @@ import           Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..),
                                        TelegramClient, Update (..), User (..),
                                        getUpdatesM, getUpdatesRequest)
 
-import BotCommands (BotCmd (..), addNote, help, readCommand, showNew, showOld)
+import BotCommands (BotCmd (..), addNote, help, readCommand, showNew, showOld,
+                    wrongCommand)
 import Const (updateIdFile)
 import Tools (putLog, saveOffset, tshow)
 
@@ -58,7 +59,7 @@ handleMessage update =
                         Start ->
                             help (fromIntegral chat_id)
                         WrongCommand{} ->
-                            pure ()
+                            wrongCommand (fromIntegral chat_id)
                 Nothing -> do
                     putLog $ userText <> " adds note"
                     addNote (fromIntegral chat_id) user_id text

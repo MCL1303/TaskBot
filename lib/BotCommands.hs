@@ -8,6 +8,7 @@ module BotCommands
     , readCommand
     , showNew
     , showOld
+    , wrongCommand
     ) where
 
 import           Control.Monad (void)
@@ -84,6 +85,9 @@ readCommand messageText =
                 wrongCmd    -> Just $ WrongCommand wrongCmd
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
+
+wrongCommand :: Integer -> TelegramClient ()
+wrongCommand chatId = sendMessage chatId "Не знаю такую команду. /help"
 
 help :: Integer -> TelegramClient ()
 help chatId = sendMessage chatId $ Text.unlines
