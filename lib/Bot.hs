@@ -5,12 +5,15 @@ module Bot
     ( bot
     ) where
 
-import Data.Foldable (for_)
-import Data.Monoid ((<>))
-import Safe (lastMay)
-import Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..), Message (..),
-                             Response (..), TelegramClient, Update (..),
-                             User (..), getUpdatesM, getUpdatesRequest)
+import           Data.Foldable (for_)
+import           Data.Maybe (fromMaybe)
+import           Data.Monoid ((<>))
+import qualified Data.Text as Text
+import           Safe (lastMay)
+import           Web.Telegram.API.Bot (Chat (..), GetUpdatesRequest (..),
+                                       Message (..), Response (..),
+                                       TelegramClient, Update (..), User (..),
+                                       getUpdatesM, getUpdatesRequest)
 
 import BotCommands (BotCmd (..), addNote, readCommand, showNew, showOld)
 import Const (updateIdFile)
@@ -33,10 +36,20 @@ handleMessage :: Update -> TelegramClient ()
 handleMessage update =
     case mMessage of
         Just Message{text = Just text, from = Just from, chat} -> do
-            let User{user_id} = from
-                Chat{chat_id} = chat
+            let User{user_id, user_first_name, user_last_name, user_username} =
+                    from
+            let userText = Text.unwords
+                    [ "User{"
+                    , tshow user_id
+                    , user_first_name
+                    , tshow $ fromMaybe "" user_last_name
+                    , tshow $ fromMaybe "" user_username
+                    , "}"
+                    ]
+            let Chat{chat_id} = chat
             case readCommand text of
-                Just command ->
+                Just command -> do
+                    putLog $ userText <> " requests " <> tshow command
                     case command of
                         ShowNew ->
                             showNew (fromIntegral chat_id) user_id
@@ -44,7 +57,9 @@ handleMessage update =
                             showOld (fromIntegral chat_id) user_id
                         WrongCommand wrongCmd ->
                             putLog $ cmdErr wrongCmd
-                Nothing -> addNote user_id text
+                Nothing -> do
+                    putLog $ userText <> " adds note"
+                    addNote user_id text
             saveOffset updateIdFile update_id
         Just msg ->
             putLog $ "unhandled " <> tshow msg

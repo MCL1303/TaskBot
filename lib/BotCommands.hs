@@ -23,6 +23,7 @@ import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
 data BotCmd = ShowNew | ShowOld | WrongCommand Text
+    deriving Show
 
 sendMessage :: Integer
             -> Text
