@@ -4,6 +4,7 @@
 module BotCommands
     ( BotCmd (..)
     , addNote
+    , help
     , readCommand
     , showNew
     , showOld
@@ -22,7 +23,7 @@ import           Web.Telegram.API.Bot (ChatId (..), TelegramClient,
 
 import DB (EntityField (NoteId, NoteOwner), Note (..), User (..), runDB)
 
-data BotCmd = ShowNew | ShowOld | WrongCommand Text
+data BotCmd = Help | ShowNew | ShowOld | Start | WrongCommand Text
     deriving Show
 
 sendMessage :: Integer
@@ -74,8 +75,18 @@ readCommand messageText =
     case Text.uncons slashCommand of
         Just ('/', tTail) ->
             case Text.strip tTail of
-                "show_new" -> Just ShowNew
-                "show_old" -> Just ShowOld
-                wrongCmd   -> Just (WrongCommand wrongCmd)
+                "help"      -> Just Help
+                "show_new"  -> Just ShowNew
+                "show_old"  -> Just ShowOld
+                "start"     -> Just Start
+                wrongCmd    -> Just $ WrongCommand wrongCmd
         _ -> Nothing
   where slashCommand = Text.takeWhile (not . isSpace) messageText
+
+help :: Integer -> TelegramClient ()
+help chatId = sendMessage chatId $ Text.unlines
+    [ "Я бот для хранения заметок."
+    , "Доступные команды:"
+    , "/show_old - Показать первые записи"
+    , "/show_new - Показать последние записи"
+    ]
